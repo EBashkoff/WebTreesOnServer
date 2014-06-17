@@ -1,0 +1,29 @@
+﻿/*  
+	-------------------------------------------------------------
+	Cascade Style Sheet - jQuery Smooth Expandable Menu
+	Description: jQuery Plugin for building menus
+	Author: pezflash - http: //www.codecanyon.net/user/pezflash
+	Version: 1.0
+	-------------------------------------------------------------
+*/ 
+
+
+/* ------------------ Global ------------------ */
+@import url(https://fonts.googleapis.com/css?family=Arimo:400,700);
+
+body {
+	background-color: #ededed;
+	font-family: 'Arimo', sans-serif;
+	min-width: 1024px;
+}
+
+a, a:link, a:visited {
+	text-decoration:none;
+}
+
+#smooth-menu {
+	position: none;
+	top: 5px;
+	left: 0px;
+	/*text-shadow: 1px 1px 1px #999;*/
+}

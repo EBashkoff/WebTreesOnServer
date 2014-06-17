@@ -1,0 +1,345 @@
+<!-- THIS FILE MUST BE SAVED IN UTF-8 ENCODING (or some special characters will be lost) -->
+Albinów
+Bale
+Białki
+Biel
+Błogoszcz
+Bojmie
+Borki
+Borki Siedleckie
+Borki-Kosiorki
+Borki-Kosy
+Borki-Paduchy
+Borki-Sołdy
+Borki-Wyrki
+Borki-Wyrki (Świercze)
+Boroszków
+Brodki
+Broszków
+Brzozów
+Budy
+Bużyska
+Bzów
+Chlewiska
+Chodów
+Choja
+Chromna
+Cielemęc
+Cierpigórz
+Ciosny
+Cisie-Zagrudzie
+Czachy
+Czajków
+Czaple Górne
+Czarnoty
+Czarnowąż
+Czepielin
+Czepielin-Kolonia
+Czerniejew
+Czołomyje
+Czuryły
+Daćbogi
+Dąbrowa
+Dąbrowa
+Dąbrówka-Ług
+Dąbrówka-Niwka
+Dąbrówka-Stany
+Dąbrówka-Wyłazy
+Dobrzanów
+Dobrzanów (Osińskie)
+Doliwo
+Domanice
+Domanice-Kolonia
+Drażniew
+Drupia
+Dziewule
+Emilianówka
+Głuchów
+Głuchówek
+Golice
+Golice-Kolonia
+Gołąbek
+Gostchorz
+Górki
+Góry
+Grabianów
+Grabowiec
+Grala-Dąbrowizna
+Gręzów
+Grochówka
+Grodzisk
+Grubale
+Helenów
+Helenów
+Hołubla
+Izdebki-Błażeje
+Izdebki-Kosny
+Izdebki-Kośmidry
+Izdebki-Wąsy
+Jagodna
+Jagodne
+Januszówka
+Jasionka
+Jedlina
+Jeruzale
+Joachimów
+Józefin
+Józefin
+Kaczory
+Kaczory
+Kaliski
+Kaliski
+Kamianki Lackie
+Kamianki Lackie (Dworszczyzna)
+Kamianki-Czabaje
+Kamianki-Nicki
+Kamianki-Wańki
+Kamieniec
+Kapuściaki
+Karcze
+Kępa
+Kisielany-Kuce
+Kisielany-Żmichy
+Klimonty
+Kłódzie
+Knychówek
+Kobylany-Kozy
+Kochany
+Kolonia Mordy
+Kołodziąż
+Kopcie
+Kopcie
+Korczew
+Koryciany
+Koszewnica
+Kotuń
+Kownaciska
+Krynica
+Krynki
+Krzesk-Królowa Niwa
+Krzesk-Majątek
+Krześlin
+Krześlinek
+Krzymosze
+Księżopole-Jałmużny
+Księżopole-Smolaki
+Kukawki
+Kwasy
+Kwasy (Kijki)
+Laskowice
+Laskowice (Laskowice-Kolonia)
+Leśniczówka
+Lipiny
+Lipiny
+Lipniak
+Lucynów
+Łączka
+Łęcznowola
+Łęczycki
+Łęki
+Łomnica
+Łozy
+Ługi Wielkie
+Ługi-Rętki
+Łupiny
+Łysów
+Łysów (Łysów-Kolonia)
+Maciejowice
+Marysin
+Męczyn
+Męczyn-Kolonia
+Mingosy
+Młynki
+Modrzew
+Mogielnica
+Mokobody
+Mokobody-Kolonia
+Mordy
+Mościbrody
+Mroczki
+Myrcha
+Nakory
+Nasiłów
+Niechnabrz
+Niwiski
+Nowa Dąbrówka
+Nowaki
+Nowe Iganie
+Nowe Okniny
+Nowe Opole
+Nowiny
+Nowy Bartków
+Ogrodniki
+Okniny-Podzdrój
+Oleksin
+Oleśnica
+Olędy
+Olędy
+Olszyc Szlachecki
+Olszyc Włościański
+Olszyc-Folwark
+Opole-Świerczyna
+Osiny
+Osiny Dolne
+Osiny Górne
+Ostoje
+Ostrówek
+Ozorów
+Paprotnia
+Pieńki
+Pieńki
+Pieńki
+Pieńki
+Pieróg
+Pióry Wielkie
+Pióry-Pytki
+Pliszki
+Pluty
+Pluty
+Płosodrza
+Pniewiski
+Podawce
+Podnieśno
+Podzdrój
+Pogonów
+Polaki
+Pruszyn
+Pruszynek
+Pruszyn-Pieńki
+Przesmyki
+Przygody
+Przywory Duże
+Przywory Małe
+Ptaszki
+Purzec
+Pustki
+Raczyny
+Radomyśl
+Radzików Wielki
+Radzików-Kornica
+Radzików-Oczki
+Radzików-Stopki
+Rakowiec
+Rogóziec
+Rososz
+Rówce
+Ruda
+Ruda Szostkowska
+Ruda Wolińska
+Rudnik Duży
+Rudnik Mały
+Ryczyca
+Rzążew
+Rzeszotków
+Seroczyn
+Sionna
+Skarżyn
+Skórzec
+Skupie
+Skwierczyn Lacki
+Smolanka
+Sobicze
+Soćki
+Sosenki-Jajki
+Sosna-Kicki
+Sosna-Korabie
+Sosna-Kozółki
+Sosna-Trojanki
+Sosnowe
+Stany Duże
+Stany Małe
+Stara Dąbrówka
+Stara Wieś
+Starczewice
+Stare Iganie
+Stare Okniny
+Stare Opole
+Stare Rzewuski
+Stare Trębice
+Stary Bartków
+Stary Krzesk
+Stasin
+Stok Lacki
+Stok Lacki-Folwark
+Stok Ruski
+Stok Wiśniewski
+Strusy
+Strzała
+Strzała (Mała Strzałka)
+Suchodołek
+Suchodół Wielki
+Suchożebry
+Szczeglacin
+Szostek
+Śmiary
+Śmiary-Kolonia
+Świniary
+Tarcze
+Tarków
+Tarkówek
+Tchórzew
+Tchórzew-Plewki
+Teodorów
+Tęczki
+Tokary
+Toki
+Topórek
+Trębice Dolne
+Trębice Górne
+Trzciniec
+Trzemuszka
+Tworki
+Tymianka
+Ujrzanów
+Uziębły
+Wesoła
+Wesółka
+Wielgorz
+Wilczonek
+Wiśniew
+Wiśniew-Kolonia
+Wodynie
+Wojnów
+Wola Serocka
+Wola Suchożebrska
+Wola Wodyńska
+Wołyńce
+Wołyńce (Wołyńce-Kolonia)
+Wólka Kamienna
+Wólka Kobyla
+Wólka Leśna
+Wólka Łysowska
+Wólka Łysowska (Zaborów)
+Wólka Proszewska
+Wólka Soseńska
+Wólka Wiśniewska
+Wólka Wołyniecka
+Wólka Żukowska
+Wólka-Biernaty
+Wyczółki
+Wyłazy
+Zabłocie
+Zalesie
+Zaleś
+Zaliwie-Brzozówka
+Zaliwie-Piegawki
+Zaliwie-Szpinki
+Zawady
+Zawady
+Zażelazna
+Zbuczyn
+Zdany
+Zemły
+Ziomaki
+Żabokliki
+Żabokliki-Kolonia
+Żdżar
+Żebraczka
+Żebrak
+Żeliszew Duży
+Żeliszew Podkościelny
+Żelków
+Żelków-Kolonia
+Żelków-Kolonia (Swoboda)
+Żuków
+Żytnia

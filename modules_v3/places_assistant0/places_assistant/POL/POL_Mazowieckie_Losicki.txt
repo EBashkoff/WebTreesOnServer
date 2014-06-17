@@ -1,0 +1,142 @@
+<!-- THIS FILE MUST BE SAVED IN UTF-8 ENCODING (or some special characters will be lost) -->
+Bachorza
+Bejdy
+Biernaty Średnie
+Binduga
+Bolesty
+Bonin
+Bonin-Ogródki
+Borsuki
+Bużka
+Chlebczyn
+Chłopków
+Chłopków-Kolonia
+Chotycze
+Chotycze-Kolonia
+Chybów
+Czeberaki
+Czuchleby
+Czuchów
+Czuchów (Marynki)
+Czuchów-Pieńki
+Czuchów-Pieńki (Helenów)
+Dawidy
+Dubicze
+Dziadkowskie
+Dziadkowskie-Folwark
+Dzięcioły
+Falatycze
+Felin
+Franopol
+Górki
+Grzybów
+Hadynów
+Harachwosty
+Hołowczyce-Kolonia
+Horoszki Duże
+Horoszki Małe
+Hruszew
+Hruszew (Hruszew-Kolonia)
+Hruszniew
+Hruszniew-Kolonia
+Huszlew
+Jeziory
+Juniewicze
+Kamianka
+Kazimierzów
+Kiełbaski
+Kisielew
+Klepaczew
+Klimczyce
+Klimczyce-Kolonia
+Klimy
+Kobylany
+Kopce
+Korczówka
+Korczówka-Kolonia
+Kornica-Kolonia
+Koszelówka
+Kownaty
+Kózki
+Krasna
+Krasna-Kolonia
+Krzywośnity
+Lipno
+Liwki Szlacheckie
+Liwki Włościańskie
+Ławy
+Łosice
+Łuzki
+Makarówka
+Meszki
+Mężenin
+Mężenin-Kolonia
+Michałów
+Mierzwice-Kolonia
+Mostów
+Mszanna
+Myszkowice
+Niemojki
+Nieznanki
+Nowa Kornica
+Nowe Hołowczyce
+Nowe Litewniki
+Nowe Łepki
+Nowe Mierzwice
+Nowe Szpaki
+Nowodomki
+Nowosielec
+Olszanka
+Ostromęczyn
+Ostromęczyn-Kolonia
+Patków
+Pietrusy
+Platerów
+Płosków
+Płosków-Kolonia
+Popławy
+Próchenki
+Puczyce
+Puczyce (Puczyce-Kolonia)
+Raczki
+Radlnia
+Rozwadów
+Różowa
+Rudka
+Rudnik
+Rusków
+Rzewuszki
+Sarnaki
+Serpelice
+Sewerynów
+Siliwonki
+Stara Kornica
+Stare Biernaty
+Stare Hołowczyce
+Stare Litewniki
+Stare Łepki
+Stare Mierzwice
+Stare Szpaki
+Szańków
+Szawły
+Szpaki-Kolonia
+Szydłówka
+Świniarów
+Terlików
+Toporów
+Walim
+Walimek
+Waśkowólka
+Władysławów
+Woźniki
+Wólka Nosowska
+Wyczółki
+Wygnanki
+Wygoda
+Wyrzyki
+Zaborze
+Zabuże
+Zakrze
+Zalesie
+Zienie
+Żurawlówka
