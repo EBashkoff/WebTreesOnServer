@@ -122,7 +122,7 @@ if (!empty($medialist)) {
         <meta content="en-us" http-equiv="Content-Language" />
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
         <script src="js/jquery-1.9.1.js"></script>
-        <script src="js/galleria/galleria-1.2.9.min.js"></script>
+        <script src="js/galleria/galleria-1.3.5.min.js"></script>
         <link rel="stylesheet" href="js/galleria/themes/azur/galleria.azur.css"></link>
         <script src="js/galleria/themes/azur/galleria.azur.min.js"></script>
         <title>Bashkoff Family Website</title>
@@ -233,6 +233,7 @@ if (!empty($medialist)) {
                     Galleria.configure({
                         imageTimeout: 960000,
                         debug: false,
+                        imageCrop: 'height',
                         dummy: 'themes/olivegreen/images/silhouette_unknown.png',
                         lightbox: <?php echo (($devicetype === 'computer') ? 'true' : 'false'); ?>,
                         fullscreenDoubleTap: <?php echo (($devicetype == 'phone') ? 'true' : 'false'); ?>,
