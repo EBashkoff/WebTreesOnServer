@@ -2,7 +2,7 @@
 // Searches based on user query.
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2012 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
 // Copyright (C) 2002 to 2009 PGV Development Team. All rights reserved.
@@ -19,9 +19,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: search_advanced.php 14681 2013-01-19 16:10:20Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'search_advanced.php');
 require './includes/session.php';
@@ -64,7 +62,7 @@ echo '<script>';
 		<?php foreach ($controller->getOtherFields() as $field=>$label) { ?>
 		opt = document.createElement('option');
 		opt.value='<?php echo $field; ?>';
-		opt.text='<?php echo addslashes($label); ?>';
+		opt.text='<?php echo WT_Filter::escapeJs($label); ?>';
 		sel.options.add(opt);
 		<?php } ?>
 		label.appendChild(sel);
@@ -149,10 +147,10 @@ echo '</script>';
 		</td>
 		<td id="vcell<?php echo $i; ?>" class="list_value">
 			<?php
-			$currentFieldSearch = $controller->getField($i); // Get this field's name and the search criterion
+			$currentFieldSearch = $controller->getField($i); // Get this field’s name and the search criterion
 			$currentField = substr($currentFieldSearch, 0, strrpos($currentFieldSearch, ':')); // Get the actual field name
 			?>
-				<input tabindex="<?php echo $i+1; ?>" type="text" id="value<?php echo $i; ?>" name="values[<?php echo $i; ?>]" value="<?php echo $controller->getValue($i); ?>"<?php echo (substr($controller->getField($i),-4)=='PLAC') ? 'class="PLAC"' : ''; ?>>
+				<input tabindex="<?php echo $i+1; ?>" type="text" id="value<?php echo $i; ?>" name="values[<?php echo $i; ?>]" value="<?php echo WT_Filter::escapeHtml($controller->getValue($i)); ?>"<?php echo (substr($controller->getField($i),-4)=='PLAC') ? 'class="PLAC"' : ''; ?>>
 			<?php if (preg_match("/^NAME:/", $currentFieldSearch)>0) { ?>
 				<select name="fields[<?php echo $i; ?>]">
 					<option value="<?php echo $currentField; ?>:EXACT"<?php if (preg_match("/:EXACT$/", $currentFieldSearch)>0) echo " selected=\"selected\""; ?>><?php echo WT_I18N::translate('Exact'); ?></option>
@@ -177,7 +175,7 @@ echo '</script>';
 		//-- relative fields
 		if ($i==0 && $fct>4) {
 			$j=$fct;
-			// Get the current options for Father's and Mother's name searches
+			// Get the current options for Father’s and Mother’s name searches
 			$fatherGivnOption = 'SDX';
 			$fatherSurnOption = 'SDX';
 			$motherGivnOption = 'SDX';
@@ -295,4 +293,4 @@ echo '</script>';
 		<input tabindex="<?php echo $i+1; ?>" type="submit" value="<?php echo WT_I18N::translate('Search'); ?>">
 		</div>
 </form>
-</div> 
+</div>

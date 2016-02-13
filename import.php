@@ -3,14 +3,14 @@
 //
 // For each gedcom that needs importing, admin_trees_manage.php will create
 // a <div id="importNNN"></div>, where NNN is the gedcom ID.
-// It will then call import.php to load the div's contents using AJAX.
+// It will then call import.php to load the div elements contents using AJAX.
 //
 // We import small blocks of data from wt_gedcom_chunks, working for
 // a couple of seconds.  When each block is loaded, we set its status
 // flag.
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 Greg Roach
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,9 +24,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: import.php 14789 2013-02-07 11:20:03Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'import.php');
 require './includes/session.php';
@@ -43,7 +41,7 @@ $controller
 
 // Don't use ged=XX as we want to be able to run without changing the current gedcom.
 // This will let us load several gedcoms together, or to edit one while loading another.
-$gedcom_id=safe_GET('gedcom_id');
+$gedcom_id = WT_Filter::getInteger('gedcom_id');
 
 // Don't allow the user to cancel the request.  We do not want to be left
 // with an incomplete transaction.
@@ -95,7 +93,7 @@ for ($end_time=microtime(true)+1.0; microtime(true)<$end_time; ) {
 	)->execute(array($gedcom_id))->fetchOneRow();
 	// If we are at the start position, do some tidying up
 	if ($first_time) {
-		$keep_media=safe_GET_bool('keep_media'.$gedcom_id);
+		$keep_media=WT_Filter::getBool('keep_media'.$gedcom_id);
 		// Delete any existing genealogical data
 		empty_database($gedcom_id, $keep_media);
 		set_gedcom_setting($gedcom_id, 'imported', false);
@@ -133,7 +131,8 @@ for ($end_time=microtime(true)+1.0; microtime(true)<$end_time; ) {
 				" WHERE gedcom_id=?"
 			)->execute(array($gedcom_id));
 			break;
-		case 'IBMPC':   // IBMPC and MS_DOS could be anything.  Mostly it means CP850.
+		case 'IBMPC':   // IBMPC, IBM WINDOWS and MS-DOS could be anything.  Mostly it means CP850.
+		case 'IBM WINDOWS':
 		case 'MS-DOS':
 		case 'CP437':
 		case 'CP850':
@@ -194,7 +193,7 @@ for ($end_time=microtime(true)+1.0; microtime(true)<$end_time; ) {
 			exit;
 		}
 		$first_time=false;
-		
+
 		// Re-fetch the data, now that we have performed character set conversion.
 		$data=WT_DB::prepare(
 			"SELECT gedcom_chunk_id, REPLACE(chunk_data, '\r', '\n') AS chunk_data".
@@ -221,7 +220,7 @@ for ($end_time=microtime(true)+1.0; microtime(true)<$end_time; ) {
 			// "SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction"
 			// The documentation says that if you get this error, wait and try again.....
 			sleep(1);
-			$controller->addInlineJavascript('jQuery("#import'.$gedcom_id.'").load("import.php?gedcom_id='.$gedcom_id.'");');
+			$controller->addInlineJavascript('jQuery("#import'.$gedcom_id.'").load("import.php?gedcom_id='.$gedcom_id.'&u='.uniqid().'");');
 		} else {
 			// A fatal error.  Nothing we can do?
 			echo '<span class="error">', $ex->getMessage(), '</span>';
@@ -234,4 +233,5 @@ for ($end_time=microtime(true)+1.0; microtime(true)<$end_time; ) {
 WT_DB::exec("COMMIT");
 
 // Reload.....
-$controller->addInlineJavascript('jQuery("#import'.$gedcom_id.'").load("import.php?gedcom_id='.$gedcom_id.'");');
+// Use uniqid() to prevent jQuery caching the previous response.
+$controller->addInlineJavascript('jQuery("#import'.$gedcom_id.'").load("import.php?gedcom_id='.$gedcom_id.'&u='.uniqid().'");');

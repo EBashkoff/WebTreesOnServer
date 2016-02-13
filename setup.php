@@ -2,7 +2,7 @@
 // Setup Wizard
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,62 +16,26 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: setup.php 14704 2013-01-22 21:30:27Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'setup.php');
 define('WT_CONFIG_FILE', 'config.ini.php');
 
-// magic quotes were deprecated in PHP5.3.0
-if (version_compare(PHP_VERSION, '5.3.0', '<')) {
-	set_magic_quotes_runtime(0);
-	// magic_quotes_gpc can’t be disabled at run-time, so clean them up as necessary.
-	if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc() ||
-		ini_get('magic_quotes_sybase') && strtolower(ini_get('magic_quotes_sybase'))!='off') {
-		$in = array(&$_POST);
-		while (list($k,$v) = each($in)) {
-			foreach ($v as $key => $val) {
-				if (!is_array($val)) {
-					$in[$k][$key] = stripslashes($val);
-					continue;
-				}
-				$in[] =& $in[$k][$key];
-			}
-		}
-		unset($in);
-	}
-}
-
-
-if (version_compare(PHP_VERSION, '5.2')<0) {
-	// Our translation system requires PHP 5.2, so we cannot translate this message :-(
-	header('Content-Type: text/html; charset=UTF-8');
-	echo
-		'<!DOCTYPE html>',
-		'<html lang="en" dir="ltr">',
-		'<head>',
-		'<meta charset="UTF-8">',
-		'<title>webtrees setup wizard</title>',
-		'<h1>Sorry, the setup wizard cannot start.</h1>',
-		'<p>This server is running PHP version ', PHP_VERSION, '</p>',
-		'<p><b>webtrees</b> requires PHP 5.2 or later.  PHP 5.3 is recommended.</p>';
-	if (version_compare(PHP_VERSION, '5.0')<0) {
-		echo '<p>Many servers offer both PHP4 and PHP5.  You may be able to change your default to PHP5 using a control panel or a configuration setting.</p>';
-	}
-	exit;
-}
+require 'library/autoload.php';
 
 // This script (uniquely) does not load session.php.
 // session.php won’t run until a configuration file exists…
 // This next block of code is a minimal version of session.php
 define('WT_WEBTREES',    'webtrees');
+define('WT_SERVER_NAME', '');
+define('WT_SCRIPT_PATH', '');
 require 'includes/authentication.php'; // for AddToLog()
 require 'includes/functions/functions_db.php'; // for get/setSiteSetting()
 define('WT_DATA_DIR',    'data/');
 define('WT_DEBUG_LANG',  false);
 define('WT_DEBUG_SQL',   false);
-define('WT_REQUIRED_MYSQL_VERSION', '5.0.13'); // For: prepared statements within stored procedures
+define('WT_REQUIRED_MYSQL_VERSION', '5.0.13');
+define('WT_REQUIRED_PHP_VERSION',   '5.3.2');
 define('WT_MODULES_DIR', 'modules_v3/');
 define('WT_ROOT', '');
 define('WT_GED_ID', null);
@@ -81,40 +45,53 @@ define('WT_PRIV_USER',   1);
 define('WT_PRIV_NONE',   0);
 define('WT_PRIV_HIDE',  -1);
 
-if (file_exists(WT_DATA_DIR.WT_CONFIG_FILE)) {
+if (file_exists(WT_DATA_DIR . WT_CONFIG_FILE)) {
 	header('Location: index.php');
 	exit;
 }
 
-// Invoke the Zend Framework Autoloader, so we can use Zend_XXXXX and WT_XXXXX classes
-set_include_path(WT_ROOT.'library'.PATH_SEPARATOR.get_include_path());
-require_once 'Zend/Loader/Autoloader.php';
-Zend_Loader_Autoloader::getInstance()->registerNamespace('WT_');
+if (version_compare(PHP_VERSION, WT_REQUIRED_PHP_VERSION)<0) {
+	// We cannot translate these messages without a modern PHP
+	echo
+		'<h1>Sorry, the setup wizard cannot start.</h1>',
+		'<p>This server is running PHP version ', PHP_VERSION, '</p>',
+		'<p>PHP ', WT_REQUIRED_PHP_VERSION , ' (or any later version) is required</p>';
+	exit;
+}
+
 require 'includes/functions/functions.php';
 require 'includes/functions/functions_utf-8.php';
 require 'includes/functions/functions_edit.php';
-$WT_SESSION=new Zend_Session_Namespace('WEBTREES');
 $WT_REQUEST=new Zend_Controller_Request_Http();
-define('WT_LOCALE', WT_I18N::init(safe_POST('lang', '[@a-zA-Z_]+')));
+$WT_SESSION=new stdClass; $WT_SESSION->locale=null; // Can't use Zend_Session until we've checked ini_set
+define('WT_LOCALE', WT_I18N::init(WT_Filter::post('lang', '[@a-zA-Z_]+')));
 
 header('Content-Type: text/html; charset=UTF-8');
-echo
-	'<!DOCTYPE html>',
-	'<html ', WT_I18N::html_markup(), '>',
-	'<head>',
-	'<title>webtrees setup wizard</title>',
-	'<style type="text/css">
+
+?>
+<!DOCTYPE html>
+<html <?php echo WT_I18N::html_markup(); ?>>
+<head>
+	<meta charset="UTF-8">
+	<title>
+		webtrees setup wizard
+	</title>
+	<style type="text/css">
 		body {color: black; background-color: white; font: 14px tahoma, arial, helvetica, sans-serif; padding:10px; }
 		a {color: black; font-weight: normal; text-decoration: none;}
 		a:hover {color: #81A9CB;}
 		h1 {color: #81A9CB; font-weight:normal;}
-		legend {color:#81A9CB; font-style: italic; font-weight:bold; padding: 0 5px 5px; align: top;}
+		legend {color:#81A9CB; font-style: italic; font-weight:bold; padding: 0 5px 5px;}
 		.good {color: green;}
 		.bad {color: red; font-weight: bold;}
 		.info {color: blue;}
-	</style>',
-	'</head><body>',
-	'<h1>', WT_I18N::translate('Setup wizard for <b>webtrees</b>'), '</h1>';
+	</style>
+	</head>
+	<body>
+		<h1>
+			<?php echo WT_I18N::translate('Setup wizard for <b>webtrees</b>'); ?>
+		</h1>
+<?php
 
 echo '<form name="config" action="', WT_SCRIPT_NAME, '" method="post" onsubmit="this.btncontinue.disabled=\'disabled\';">';
 echo '<input type="hidden" name="lang" value="', WT_LOCALE, '">';
@@ -123,19 +100,27 @@ echo '<input type="hidden" name="lang" value="', WT_LOCALE, '">';
 // Step one - choose language and confirm server configuration
 ////////////////////////////////////////////////////////////////////////////////
 
-if (empty($_POST['lang'])) {
+if (!isset($_POST['lang'])) {
 	echo
 		'<p>', WT_I18N::translate('Change language'), ' ',
-		edit_field_language('change_lang', WT_LOCALE, 'onChange="parent.location=\'',  WT_SCRIPT_NAME,  '?lang=\'+this.value;">'),
+		edit_field_language('change_lang', WT_LOCALE, 'onchange="window.location=\'' .  WT_SCRIPT_NAME . '?lang=\'+this.value;">'),
 		'</p>',
 		'<h2>', WT_I18N::translate('Checking server configuration'), '</h2>';
 	$warnings=false;
 	$errors=false;
 
+	// Mandatory functions
+	$disable_functions=preg_split('/ *, */', ini_get('disable_functions'));
+	foreach (array('ini_set', 'parse_ini_file') as $function) {
+		if (in_array($function, $disable_functions)) {
+			echo '<p class="bad">', /* I18N: %s is a PHP function/module/setting */ WT_I18N::translate('%s is disabled on this server.  You cannot install webtrees until it is enabled.  Please ask your server’s administrator to enable it.', $function.'()'), '</p>';
+			$errors=true;
+		}
+	}
 	// Mandatory extensions
 	foreach (array('pcre', 'pdo', 'pdo_mysql', 'session', 'iconv') as $extension) {
 		if (!extension_loaded($extension)) {
-			echo '<p class="bad">', WT_I18N::translate('PHP extension "%s" is disabled.  You cannot install webtrees until this is enabled.  Please ask your server\'s administrator to enable it.', $extension), '</p>';
+			echo '<p class="bad">', WT_I18N::translate('PHP extension “%s” is disabled.  You cannot install webtrees until this is enabled.  Please ask your server’s administrator to enable it.', $extension), '</p>';
 			$errors=true;
 		}
 	}
@@ -147,7 +132,7 @@ if (empty($_POST['lang'])) {
 		'simplexml' => /* I18N: a program feature */ WT_I18N::translate('reporting'),
 	) as $extension=>$features) {
 		if (!extension_loaded($extension)) {
-			echo '<p class="bad">', WT_I18N::translate('PHP extension "%1$s" is disabled.  Without it, the following features will not work: %2$s.  Please ask your server\'s administrator to enable it.', $extension, $features), '</p>';
+			echo '<p class="bad">', WT_I18N::translate('PHP extension “%1$s” is disabled.  Without it, the following features will not work: %2$s.  Please ask your server’s administrator to enable it.', $extension, $features), '</p>';
 			$warnings=true;
 		}
 	}
@@ -156,7 +141,7 @@ if (empty($_POST['lang'])) {
 		'file_uploads'=>/* I18N: a program feature */ WT_I18N::translate('file upload capability'),
 	) as $setting=>$features) {
 		if (!ini_get($setting)) {
-			echo '<p class="bad">', WT_I18N::translate('PHP setting "%1$s" is disabled. Without it, the following features will not work: %2$s.  Please ask your server\'s administrator to enable it.', $setting, $features), '</p>';
+			echo '<p class="bad">', WT_I18N::translate('PHP setting “%1$s” is disabled. Without it, the following features will not work: %2$s.  Please ask your server’s administrator to enable it.', $setting, $features), '</p>';
 			$warnings=true;
 		}
 	}
@@ -168,7 +153,17 @@ if (empty($_POST['lang'])) {
 	// However, this is unreliable, especially on servers with custom restrictions.
 	// Now, we just show the default values.  These can (hopefully!) be changed using the
 	// site settings page.
-	$maxmem=to_mb(ini_get('memory_limit'));
+	$memory_limit = ini_get('memory_limit');
+	switch (strtoupper(substr($memory_limit, -1))) {
+	case 'K':
+		$maxmem = (int)(substr($memory_limit, 0, strlen($memory_limit)-1)/1024);
+	case 'M':
+		$maxmem = (int)(substr($memory_limit, 0, strlen($memory_limit)-1));
+	case 'G':
+		$maxmem = (int)(1024*substr($memory_limit, 0, strlen($memory_limit)-1));
+	default:
+		$maxmem = $memory_limit;
+	}
 	$maxcpu=ini_get('max_execution_time');
 	echo
 		'<p>',
@@ -183,11 +178,11 @@ if (empty($_POST['lang'])) {
 		WT_I18N::translate('Large systems (50000 individuals): 64-128MB, 40-80 seconds'),
 		'</p>',
 		($maxmem<32 || $maxcpu<20) ? '<p class="bad">' : '<p class="good">',
-		WT_I18N::translate('This server\'s memory limit is %dMB and its CPU time limit is %d seconds.', $maxmem, $maxcpu),
+		WT_I18N::translate('This server’s memory limit is %dMB and its CPU time limit is %d seconds.', $maxmem, $maxcpu),
 		'</p><p>',
 		WT_I18N::translate('If you try to exceed these limits, you may experience server time-outs and blank pages.'),
 		'</p><p>',
-		WT_I18N::translate('If your server\'s security policy permits it, you will be able to request increased memory or CPU time using the <b>webtrees</b> administration page.  Otherwise, you will need to contact your server\'s administrator.'),
+		WT_I18N::translate('If your server’s security policy permits it, you will be able to request increased memory or CPU time using the <b>webtrees</b> administration page.  Otherwise, you will need to contact your server’s administrator.'),
 		'</p>';
 	if (!$errors) {
 		echo '<input type="hidden" name="maxcpu" value="', $maxcpu, '">';
@@ -225,12 +220,12 @@ if ($FAB != 'FAB!') {
 // Step three - Database connection.
 ////////////////////////////////////////////////////////////////////////////////
 
-if (empty($_POST['dbhost'])) $_POST['dbhost']='localhost';
-if (empty($_POST['dbport'])) $_POST['dbport']='3306';
-if (empty($_POST['dbuser'])) $_POST['dbuser']='';
-if (empty($_POST['dbpass'])) $_POST['dbpass']='';
-if (empty($_POST['dbname'])) $_POST['dbname']='';
-if (empty($_POST['tblpfx'])) $_POST['tblpfx']='wt_';
+if (!isset($_POST['dbhost'])) $_POST['dbhost']='localhost';
+if (!isset($_POST['dbport'])) $_POST['dbport']='3306';
+if (!isset($_POST['dbuser'])) $_POST['dbuser']='';
+if (!isset($_POST['dbpass'])) $_POST['dbpass']='';
+if (!isset($_POST['dbname'])) $_POST['dbname']='';
+if (!isset($_POST['tblpfx'])) $_POST['tblpfx']='wt_';
 
 define('WT_TBLPREFIX', $_POST['tblpfx']);
 try {
@@ -264,23 +259,23 @@ if (empty($_POST['dbuser']) || !WT_DB::isConnected() || !$db_version_ok) {
 	echo
 		'<h2>', WT_I18N::translate('Connection to database server'), '</h2>',
 		'<p>', WT_I18N::translate('<b>webtrees</b> needs a MySQL database, version %s or later.', WT_REQUIRED_MYSQL_VERSION), '</p>',
-		'<p>', WT_I18N::translate('Your server\'s administrator will provide you with the connection details.'), '</p>',
+		'<p>', WT_I18N::translate('Your server’s administrator will provide you with the connection details.'), '</p>',
 		'<fieldset><legend>', WT_I18N::translate('Database connection'), '</legend>',
 		'<table border="0"><tr><td>',
 		WT_I18N::translate('Server name'), '</td><td>',
-		'<input type="text" name="dbhost" value="', htmlspecialchars($_POST['dbhost']), '" dir="ltr"></td><td>',
+		'<input type="text" name="dbhost" value="', WT_Filter::escapeHtml($_POST['dbhost']), '" dir="ltr"></td><td>',
 		WT_I18N::translate('Most sites are configured to use localhost.  This means that your database runs on the same computer as your web server.'),
 		'</td></tr><tr><td>',
 		WT_I18N::translate('Port number'), '</td><td>',
-		'<input type="text" name="dbport" value="', htmlspecialchars($_POST['dbport']), '"></td><td>',
+		'<input type="text" name="dbport" value="', WT_Filter::escapeHtml($_POST['dbport']), '"></td><td>',
 		WT_I18N::translate('Most sites are configured to use the default value of 3306.'),
 		'</td></tr><tr><td>',
 		WT_I18N::translate('Database user account'), '</td><td>',
-		'<input type="text" name="dbuser" value="', htmlspecialchars($_POST['dbuser']), '" autofocus></td><td>',
+		'<input type="text" name="dbuser" value="', WT_Filter::escapeHtml($_POST['dbuser']), '" autofocus></td><td>',
 		WT_I18N::translate('This is case sensitive.'),
 		'</td></tr><tr><td>',
 		WT_I18N::translate('Database password'), '</td><td>',
-		'<input type="password" name="dbpass" value="', htmlspecialchars($_POST['dbpass']), '"></td><td>',
+		'<input type="password" name="dbpass" value="', WT_Filter::escapeHtml($_POST['dbpass']), '"></td><td>',
 		WT_I18N::translate('This is case sensitive.'),
 		'</td></tr><tr><td>',
 		'</td></tr></table>',
@@ -291,10 +286,10 @@ if (empty($_POST['dbuser']) || !WT_DB::isConnected() || !$db_version_ok) {
 		exit;
 } else {
 	// Copy these values through to the next step
-	echo '<input type="hidden" name="dbhost" value="', htmlspecialchars($_POST['dbhost']), '">';
-	echo '<input type="hidden" name="dbport" value="', htmlspecialchars($_POST['dbport']), '">';
-	echo '<input type="hidden" name="dbuser" value="', htmlspecialchars($_POST['dbuser']), '">';
-	echo '<input type="hidden" name="dbpass" value="', htmlspecialchars($_POST['dbpass']), '">';
+	echo '<input type="hidden" name="dbhost" value="', WT_Filter::escapeHtml($_POST['dbhost']), '">';
+	echo '<input type="hidden" name="dbport" value="', WT_Filter::escapeHtml($_POST['dbport']), '">';
+	echo '<input type="hidden" name="dbuser" value="', WT_Filter::escapeHtml($_POST['dbuser']), '">';
+	echo '<input type="hidden" name="dbpass" value="', WT_Filter::escapeHtml($_POST['dbpass']), '">';
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -358,16 +353,16 @@ if ($dbname_ok) {
 if (!$dbname_ok) {
 	echo
 		'<h2>', WT_I18N::translate('Database and table names'), '</h2>',
-		'<p>', WT_I18N::translate('A database server can store many separate databases.  You need to select an existing database (created by your server\'s administrator) or create a new one (if your database user account has sufficient privileges).'), '</p>',
+		'<p>', WT_I18N::translate('A database server can store many separate databases.  You need to select an existing database (created by your server’s administrator) or create a new one (if your database user account has sufficient privileges).'), '</p>',
 		'<fieldset><legend>', WT_I18N::translate('Database name'), '</legend>',
 		'<table border="0"><tr><td>',
 		WT_I18N::translate('Database name'), '</td><td>',
-		'<input type="text" name="dbname" value="', htmlspecialchars($_POST['dbname']), '" autofocus></td><td>',
+		'<input type="text" name="dbname" value="', WT_Filter::escapeHtml($_POST['dbname']), '" autofocus></td><td>',
 		WT_I18N::translate('This is case sensitive. If a database with this name does not already exist webtrees will attempt to create one for you. Success will depend on permissions set for your web server, but you will be notified if this fails.'),
 		'</td></tr><tr><td>',
 		WT_I18N::translate('Table prefix'), '</td><td>',
-		'<input type="text" name="tblpfx" value="', htmlspecialchars($_POST['tblpfx']), '"></td><td>',
-		WT_I18N::translate('The prefix is optional, but recommended.  By giving the table names a unique prefix you can let several different applications share the same database. "wt_" is suggested, but can be anything you want.'),
+		'<input type="text" name="tblpfx" value="', WT_Filter::escapeHtml($_POST['tblpfx']), '"></td><td>',
+		WT_I18N::translate('The prefix is optional, but recommended.  By giving the table names a unique prefix you can let several different applications share the same database. “wt_” is suggested, but can be anything you want.'),
 		'</td></tr></table>',
 		'</fieldset>',
 		'<br><hr><input type="submit" id="btncontinue" value="', WT_I18N::translate('continue'), '">',
@@ -376,28 +371,19 @@ if (!$dbname_ok) {
 		exit;
 } else {
 	// Copy these values through to the next step
-	echo '<input type="hidden" name="dbname" value="', htmlspecialchars($_POST['dbname']), '">';
-	echo '<input type="hidden" name="tblpfx" value="', htmlspecialchars($_POST['tblpfx']), '">';
+	echo '<input type="hidden" name="dbname" value="', WT_Filter::escapeHtml($_POST['dbname']), '">';
+	echo '<input type="hidden" name="tblpfx" value="', WT_Filter::escapeHtml($_POST['tblpfx']), '">';
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Step five - site setup data
 ////////////////////////////////////////////////////////////////////////////////
 
-if (empty($_POST['wtname'    ])) $_POST['wtname'    ]='';
-if (empty($_POST['wtuser'    ])) $_POST['wtuser'    ]='';
-if (empty($_POST['wtpass'    ])) $_POST['wtpass'    ]='';
-if (empty($_POST['wtpass2'   ])) $_POST['wtpass2'   ]='';
-if (empty($_POST['wtemail'   ])) $_POST['wtemail'   ]='';
-if (empty($_POST['smtpuse'   ])) $_POST['smtpuse'   ]='internal';
-if (empty($_POST['smtpserv'  ])) $_POST['smtpserv'  ]='localhost';
-if (empty($_POST['smtpport'  ])) $_POST['smtpport'  ]='25';
-if (empty($_POST['smtpusepw' ])) $_POST['smtpusepw' ]=1;
-if (empty($_POST['smtpuser'  ])) $_POST['smtpuser'  ]='';
-if (empty($_POST['smtppass'  ])) $_POST['smtppass'  ]='';
-if (empty($_POST['smtpsecure'])) $_POST['smtpsecure']='none';
-if (empty($_POST['smtpfrom'  ])) $_POST['smtpfrom'  ]='webmaster@localhost';
-if (empty($_POST['smtpsender'])) $_POST['smtpsender']=$_POST['smtpfrom'];
+if (!isset($_POST['wtname'    ])) $_POST['wtname'    ]='';
+if (!isset($_POST['wtuser'    ])) $_POST['wtuser'    ]='';
+if (!isset($_POST['wtpass'    ])) $_POST['wtpass'    ]='';
+if (!isset($_POST['wtpass2'   ])) $_POST['wtpass2'   ]='';
+if (!isset($_POST['wtemail'   ])) $_POST['wtemail'   ]='';
 
 if (empty($_POST['wtname']) || empty($_POST['wtuser']) || strlen($_POST['wtpass'])<6 || strlen($_POST['wtpass2'])<6 || empty($_POST['wtemail']) || $_POST['wtpass']<>$_POST['wtpass2']) {
 	if (strlen($_POST['wtpass'])>0 && strlen($_POST['wtpass'])<6) {
@@ -414,96 +400,24 @@ if (empty($_POST['wtname']) || empty($_POST['wtuser']) || strlen($_POST['wtpass'
 		'<fieldset><legend>', WT_I18N::translate('Administrator account'), '</legend>',
 		'<table border="0"><tr><td>',
 		WT_I18N::translate('Your name'), '</td><td>',
-		'<input type="text" name="wtname" value="', htmlspecialchars($_POST['wtname']), '" autofocus></td><td>',
+		'<input type="text" name="wtname" value="', WT_Filter::escapeHtml($_POST['wtname']), '" autofocus></td><td>',
 		WT_I18N::translate('This is your real name, as you would like it displayed on screen.'),
 		'</td></tr><tr><td>',
 		WT_I18N::translate('Login ID'), '</td><td>',
-		'<input type="text" name="wtuser" value="', htmlspecialchars($_POST['wtuser']), '"></td><td>',
+		'<input type="text" name="wtuser" value="', WT_Filter::escapeHtml($_POST['wtuser']), '"></td><td>',
 		WT_I18N::translate('You will use this to login to webtrees.'),
 		'</td></tr><tr><td>',
 		WT_I18N::translate('Password'), '</td><td>',
-		'<input type="password" name="wtpass" value="', htmlspecialchars($_POST['wtpass']), '"></td><td>',
+		'<input type="password" name="wtpass" value="', WT_Filter::escapeHtml($_POST['wtpass']), '"></td><td>',
 		WT_I18N::translate('This must to be at least six characters.  It is case-sensitive.'),
 		'</td></tr><tr><td>',
 		'&nbsp;', '</td><td>',
-		'<input type="password" name="wtpass2" value="', htmlspecialchars($_POST['wtpass2']), '"></td><td>',
+		'<input type="password" name="wtpass2" value="', WT_Filter::escapeHtml($_POST['wtpass2']), '"></td><td>',
 		WT_I18N::translate('Type your password again, to make sure you have typed it correctly.'),
 		'</td></tr><tr><td>',
 		WT_I18N::translate('Email address'), '</td><td>',
-		'<input type="email" name="wtemail" value="', htmlspecialchars($_POST['wtemail']), '"></td><td>',
+		'<input type="email" name="wtemail" value="', WT_Filter::escapeHtml($_POST['wtemail']), '"></td><td>',
 		WT_I18N::translate('This email address will be used to send you password reminders, site notifications, and messages from other family members who are registered on the site.'),
-		'</td></tr><tr><td>',
-		'</td></tr></table>',
-		'</fieldset>',
-		'<br><br>',
-		'<h3>', WT_I18N::translate('Email'), '</h3>',
-		'<p>', WT_I18N::translate('<b>webtrees</b> needs to send emails, such as password reminders and site notifications.  To do this, it can use this server\'s built in PHP mail facility (which is not always available) or an external SMTP (mail-relay) service, for which you will need to provide the connection details.'), '</p>',
-		'<p>', WT_I18N::translate('To use a Google mail account, use the following settings: server=smtp.gmail.com, port=587, security=tls, username=xxxxx@gmail.com, password=[your gmail password]'), '</p>',
-		'<p>', WT_I18N::translate('If you do not know these settings, leave the default values.  They may work.  You can change them later.'), '</p>',
-		'<fieldset><legend>', WT_I18N::translate('SMTP mail server'), '</legend>',
-		'<table border="0"><tr><td>',
-		WT_I18N::translate('Messages'), '</td><td>',
-		'<select name="smtpuse" onchange="document.config.smtpserv.disabled=(this.value!=\'external\');document.config.smtpport.disabled=(this.value!=\'external\');document.config.smtpusepw.disabled=(this.value!=\'external\');document.config.smtpuser.disabled=(this.value!=\'external\');document.config.smtppass.disabled=(this.value!=\'external\');document.config.smtpsecure.disabled=(this.value!=\'external\');document.config.smtpfrom.disabled=(this.value!=\'external\');document.config.smtpsender.disabled=(this.value!=\'external\');">',
-		'<option value="internal" ',
-		$_POST['smtpuse']=='internal' ? 'selected="selected"' : '',
-		'>', WT_I18N::translate('Use PHP mail to send messages'), '</option>',
-		'<option value="external" ',
-		$_POST['smtpuse']=='external' ? 'selected="selected"' : '',
-		'>', WT_I18N::translate('Use SMTP to send messages'), '</option>',
-		'<option value="disabled" ',
-		$_POST['smtpuse']=='disbled' ? 'selected="selected"' : '',
-		'>', WT_I18N::translate('Do not send messages'), '</option>',
-		'</select></td><td>',
-		WT_I18N::translate('If you don\'t want to send mail, for example when running webtrees with a single user or on a standalone computer, you can disable this feature.'),
-		'</td></tr><tr><td>',
-		WT_I18N::translate('Server'), '</td><td>',
-		'<input type="text" name="smtpserv" value="', htmlspecialchars($_POST['smtpserv']), '"', $_POST['smtpuse']=='exernal' ? '' : 'disabled', '></td><td>',
-		WT_I18N::translate('This is the name of the SMTP server. \'localhost\' means that the mail service is running on the same computer as your web server.'),
-		'</td></tr><tr><td>',
-		WT_I18N::translate('Port'), '</td><td>',
-		'<input type="text" name="smtpport" value="', htmlspecialchars($_POST['smtpport']), '"', $_POST['smtpuse']=='exernal' ? '' : 'disabled', '></td><td>',
-		WT_I18N::translate('By default, SMTP works on port 25.'),
-		'</td></tr><tr><td>',
-		WT_I18N::translate('Use password'), '</td><td>',
-		'<select name="smtpusepw"', $_POST['smtpuse']=='exernal' ? '' : 'disabled', '>',
-		'<option value="yes" ',
-		$_POST['smtpusepw'] ? 'selected="selected"' : '',
-		'>', WT_I18N::translate('yes'), '</option>',
-		'<option value="no" ',
-		!$_POST['smtpusepw'] ? 'selected="selected"' : '',
-		'>', WT_I18N::translate('no'), '</option>',
-		'</select></td><td>',
-		WT_I18N::translate('Most SMTP servers require a password.'),
-		'</td></tr><tr><td>',
-		WT_I18N::translate('Username'), '</td><td>',
-		'<input type="text" name="smtpuser" value="', htmlspecialchars($_POST['smtpuser']), '"', $_POST['smtpuse']=='exernal' ? '' : 'disabled', '></td><td>',
-		'&nbsp;',
-		'</td></tr><tr><td>',
-		WT_I18N::translate('Password'), '</td><td>',
-		'<input type="password" name="smtppass" value="', htmlspecialchars($_POST['smtppass']), '"', $_POST['smtpuse']=='exernal' ? '' : 'disabled', '></td><td>',
-		'&nbsp;',
-		'</td></tr><tr><td>',
-		WT_I18N::translate('Security'), '</td><td>',
-		'<select name="smtpsecure"', $_POST['smtpuse']=='exernal' ? '' : 'disabled', '>',
-		'<option value="none" ',
-		$_POST['smtpsecure']=='none' ? 'selected="selected"' : '',
-		'>', WT_I18N::translate('none'), '</option>',
-		'<option value="tls" ',
-		$_POST['smtpsecure']=='tls' ? 'selected="selected"' : '',
-		'>', /* I18N: Transport Layer Security - a secure communications protocol */ WT_I18N::translate('tls'), '</option>',
-		'<option value="ssl" ',
-		$_POST['smtpsecure']=='ssl' ? 'selected="selected"' : '',
-		'>', /* I18N: Secure Sockets Layer - a secure communications protocol*/ WT_I18N::translate('ssl'), '</option>',
-		'</select></td><td>',
-		WT_I18N::translate('Most servers do not use secure connections.'),
-		'</td></tr><tr><td>',
-		/* I18N: the “From:” header in an email */ WT_I18N::translate('From email address'), '</td><td>',
-		'<input type="text" name="smtpfrom" size="40" value="', htmlspecialchars($_POST['smtpfrom']), '"', $_POST['smtpuse']=='exernal' ? '' : 'disabled', '></td><td>',
-		WT_I18N::translate('This is used in the "From:" header when sending mails.'),
-		'</td></tr><tr><td>',
-		/* I18N: the “Sender:” header in an email */ WT_I18N::translate('Sender email address'), '</td><td>',
-		'<input type="text" name="smtpsender" size="40" value="', htmlspecialchars($_POST['smtpsender']), '"', $_POST['smtpuse']=='exernal' ? '' : 'disabled', '></td><td>',
-		WT_I18N::translate('This is used in the "Sender:" header when sending mails.  It is often the same as the "From:" header.'),
 		'</td></tr><tr><td>',
 		'</td></tr></table>',
 		'</fieldset>',
@@ -513,20 +427,11 @@ if (empty($_POST['wtname']) || empty($_POST['wtuser']) || strlen($_POST['wtpass'
 		exit;
 } else {
 	// Copy these values through to the next step
-	echo '<input type="hidden" name="wtname"     value="'.htmlspecialchars($_POST['wtname']).'">';
-	echo '<input type="hidden" name="wtuser"     value="'.htmlspecialchars($_POST['wtuser']).'">';
-	echo '<input type="hidden" name="wtpass"     value="'.htmlspecialchars($_POST['wtpass']).'">';
-	echo '<input type="hidden" name="wtpass2"    value="'.htmlspecialchars($_POST['wtpass2']).'">';
-	echo '<input type="hidden" name="wtemail"    value="'.htmlspecialchars($_POST['wtemail']).'">';
-	echo '<input type="hidden" name="smtpuse"    value="'.htmlspecialchars($_POST['smtpuse']).'">';
-	echo '<input type="hidden" name="smtpserv"   value="'.htmlspecialchars($_POST['smtpserv']).'">';
-	echo '<input type="hidden" name="smtpport"   value="'.htmlspecialchars($_POST['smtpport']).'">';
-	echo '<input type="hidden" name="smtpusepw"  value="'.htmlspecialchars($_POST['smtpusepw']).'">';
-	echo '<input type="hidden" name="smtpuser"   value="'.htmlspecialchars($_POST['smtpuser']).'">';
-	echo '<input type="hidden" name="smtppass"   value="'.htmlspecialchars($_POST['smtppass']).'">';
-	echo '<input type="hidden" name="smtpsecure" value="'.htmlspecialchars($_POST['smtpsecure']).'">';
-	echo '<input type="hidden" name="smtpfrom"   value="'.htmlspecialchars($_POST['smtpfrom']).'">';
-	echo '<input type="hidden" name="smtpsender" value="'.htmlspecialchars($_POST['smtpsender']).'">';
+	echo '<input type="hidden" name="wtname"     value="', WT_Filter::escapeHtml($_POST['wtname']), '">';
+	echo '<input type="hidden" name="wtuser"     value="', WT_Filter::escapeHtml($_POST['wtuser']), '">';
+	echo '<input type="hidden" name="wtpass"     value="', WT_Filter::escapeHtml($_POST['wtpass']), '">';
+	echo '<input type="hidden" name="wtpass2"    value="', WT_Filter::escapeHtml($_POST['wtpass2']), '">';
+	echo '<input type="hidden" name="wtemail"    value="', WT_Filter::escapeHtml($_POST['wtemail']), '">';
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -935,6 +840,7 @@ try {
 		" ('Mozilla/5.0 (%) AppleWebKit/% (KHTML, like Gecko)%', 'allow', 'WebKit-based browsers'),".
 		" ('Opera/% (%) Presto/% Version/%', 'allow', 'Presto-based browsers'),".
 		" ('Mozilla/% (compatible; MSIE %', 'allow', 'Trident-based browsers'),".
+		" ('Mozilla/% (Windows%; Trident%; rv:%) like Gecko', 'allow', 'Modern Internet Explorer'),".
 		" ('Mozilla/5.0 (compatible; Konqueror/%', 'allow', 'Konqueror browser')"
 	);
 
@@ -967,24 +873,22 @@ try {
 		"INSERT IGNORE INTO `##site_setting` (setting_name, setting_value) VALUES ".
 		"('WT_SCHEMA_VERSION',               '-2'),".
 		"('INDEX_DIRECTORY',                 'data/'),".
-		"('STORE_MESSAGES',                  '1'),".
 		"('USE_REGISTRATION_MODULE',         '1'),".
 		"('REQUIRE_ADMIN_AUTH_REGISTRATION', '1'),".
 		"('ALLOW_USER_THEMES',               '1'),".
 		"('ALLOW_CHANGE_GEDCOM',             '1'),".
 		"('SESSION_TIME',                    '7200'),".
-		"('SMTP_ACTIVE',                     ?),".
-		"('SMTP_HOST',                       ?),".
+		"('SMTP_ACTIVE',                     'internal'),".
+		"('SMTP_HOST',                       'localhost'),".
+		"('SMTP_PORT',                       '25'),".
+		"('SMTP_AUTH',                       '1'),".
+		"('SMTP_AUTH_USER',                  ''),".
+		"('SMTP_AUTH_PASS',                  ''),".
+		"('SMTP_SSL',                        'none'),".
 		"('SMTP_HELO',                       ?),".
-		"('SMTP_PORT',                       ?),".
-		"('SMTP_AUTH',                       ?),".
-		"('SMTP_AUTH_USER',                  ?),".
-		"('SMTP_AUTH_PASS',                  ?),".
-		"('SMTP_SSL',                        ?),".
 		"('SMTP_FROM_NAME',                  ?)"
 	)->execute(array(
-		$_POST['smtpuse'], $_POST['smtpserv'], $_POST['smtpsender'], $_POST['smtpport'], $_POST['smtpusepw'],
-		$_POST['smtpuser'], $_POST['smtppass'], $_POST['smtpsecure'], $_POST['smtpfrom']
+		$_SERVER['SERVER_NAME'], $_SERVER['SERVER_NAME']
 	));
 
 	// Search for all installed modules, and enable them.
@@ -992,11 +896,19 @@ try {
 
 	// Create the default settings for new users/family trees
 	WT_DB::prepare(
-		"INSERT IGNORE INTO `##block` (user_id, location, block_order, module_name) VALUES (-1, 'main', 1, 'todays_events'), (-1, 'main', 2, 'user_messages'), (-1, 'main', 3, 'user_favorites'), (-1, 'side', 1, 'user_welcome'), (-1, 'side', 2, 'random_media'), (-1, 'side', 3, 'upcoming_events'), (-1, 'side', 4, 'logged_in')"
+		"INSERT INTO `##block` (user_id, location, block_order, module_name) VALUES (-1, 'main', 1, 'todays_events'), (-1, 'main', 2, 'user_messages'), (-1, 'main', 3, 'user_favorites'), (-1, 'side', 1, 'user_welcome'), (-1, 'side', 2, 'random_media'), (-1, 'side', 3, 'upcoming_events'), (-1, 'side', 4, 'logged_in')"
 	)->execute();
 	WT_DB::prepare(
-		"INSERT IGNORE INTO `##block` (gedcom_id, location, block_order, module_name) VALUES (-1, 'main', 1, 'gedcom_stats'), (-1, 'main', 2, 'gedcom_news'), (-1, 'main', 3, 'gedcom_favorites'), (-1, 'main', 4, 'review_changes'), (-1, 'side', 1, 'gedcom_block'), (-1, 'side', 2, 'random_media'), (-1, 'side', 3, 'todays_events'), (-1, 'side', 4, 'logged_in')"
+		"INSERT INTO `##block` (gedcom_id, location, block_order, module_name) VALUES (-1, 'main', 1, 'gedcom_stats'), (-1, 'main', 2, 'gedcom_news'), (-1, 'main', 3, 'gedcom_favorites'), (-1, 'main', 4, 'review_changes'), (-1, 'side', 1, 'gedcom_block'), (-1, 'side', 2, 'random_media'), (-1, 'side', 3, 'todays_events'), (-1, 'side', 4, 'logged_in')"
 	)->execute();
+	// Create the blocks for the admin user
+	WT_DB::prepare(
+		"INSERT INTO `##block` (user_id, location, block_order, module_name)" .
+		" SELECT 1, location, block_order, module_name" .
+		" FROM `##block`" .
+		" WHERE user_id=-1"
+	)->execute();
+
 
 	// Write the config file.  We already checked that this would work.
 	$config_ini_php=
@@ -1017,22 +929,10 @@ try {
 	exit;
 } catch (PDOException $ex) {
 	echo
-		'<p class="bad">', WT_I18N::translate('An unexpected database error occured.'), '</p>',
+		'<p class="bad">', WT_I18N::translate('An unexpected database error occurred.'), '</p>',
 		'<pre>', $ex->getMessage(), '</pre>',
 		'<p class="info">', WT_I18N::translate('The webtrees developers would be very interested to learn about this error.  If you contact them, they will help you resolve the problem.'), '</p>';
 }
 echo '</form>';
 echo '</body>';
 echo '</html>';
-
-function to_mb($str) {
-	if (substr($str, -1, 1)=='K') {
-		return floor(substr($str, 0, strlen($str)-1)/1024);
-	}
-	if (substr($str, -1, 1)=='M') {
-		return floor(substr($str, 0, strlen($str)-1));
-	}
-	if (substr($str, -1, 1)=='G') {
-		return floor(1024*substr($str, 0, strlen($str)-1));
-	}
-}

@@ -10,7 +10,7 @@
 // seconds, for systems with low timeout values.
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2012 Greg Roach
+// Copyright (C) 2014 Greg Roach
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,9 +24,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: db_schema_17_18.php 14276 2012-09-14 15:39:40Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 if (!defined('WT_WEBTREES')) {
 	header('HTTP/1.0 403 Forbidden');
@@ -61,7 +59,7 @@ self::exec(
 	" ('Mozilla/5.0 (compatible; Konqueror/%', 'allow', 'Konqueror browser')"
 );
 
-// Don't do this.  We can't easily/safely migrate the data, and the user may
+// Don't do this.  We can’t easily/safely migrate the data, and the user may
 // wish to migrate it manually....
 //self::exec("DROP TABLE IF EXISTS `##wt_ip_address`");
 

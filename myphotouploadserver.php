@@ -17,12 +17,12 @@ if (!(array_key_exists('HTTP_REFERER', $_SERVER) && (strpos($_SERVER['HTTP_REFER
 }
 require 'mysession.php';
 
-$step = $_GET ? safe_GET('step') : safe_POST('step');
+$step = $_GET ? WT_Filter::get('step') : WT_Filter::post('step');
 // Since ampersand is a legitimate filename character, this is removed from the regex for the following line
-$substep = $_GET ? safe_GET('substep', preg_replace(array('/&/', '/%/'), '', WT_REGEX_NOSCRIPT))
-                              : safe_POST('substep', preg_replace(array('/&/', '/%/'), '', WT_REGEX_NOSCRIPT));
-$folderpath = $_GET ? safe_GET('path') : safe_POST('path');
-$newfolder = $_GET ? safe_GET('folder') : safe_POST('folder');
+$substep = $_GET ? WT_Filter::get('substep', preg_replace(array('/&/', '/%/'), '', WT_REGEX_NOSCRIPT))
+                              : WT_Filter::post('substep', preg_replace(array('/&/', '/%/'), '', WT_REGEX_NOSCRIPT));
+$folderpath = $_GET ? WT_Filter::get('path') : WT_Filter::post('path');
+$newfolder = $_GET ? WT_Filter::get('folder') : WT_Filter::post('folder');
 
 if ($uid != 0) {  //  Here is where the work of this program begins
     $numsuccesses = 0;

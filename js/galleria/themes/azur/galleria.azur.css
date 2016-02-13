@@ -19,14 +19,14 @@
     top: 0;
     left: 0;
     right: 0;
-    bottom: 40px;
+    bottom: 70px;
     background:#000 url(bg.png);
 }
 .galleria-container.light .galleria-stage {
     background:#181818 url(bg.png);
 }
 .galleria-bar {
-    height: 40px;
+    height: 70px;
     position: absolute;
     bottom: 0;
     left: 0;
@@ -43,7 +43,7 @@
 .galleria-fullscreen,
 .galleria-play {
     width: 40px;
-    height: 40px;
+    height: 70px;
     position: absolute;
     left: 0;
     background-position: 50% 50%;
@@ -60,7 +60,7 @@
 }
 .galleria-play {
     background-image: url(playpause-white.png);
-    background-position: 50% 11px;
+    background-position: 50% 27px;
 }
 .galleria-container.light .galleria-play {
     background-image: url(playpause-neg.png);

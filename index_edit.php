@@ -2,10 +2,10 @@
 // Change the blocks on "My page" and "Home page"
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2012 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
-// Copyright (C) 2002 to 2009  PGV Development Team.  All rights reserved.
+// Copyright (C) 2002 to 2009 PGV Development Team.  All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,9 +19,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: index_edit.php 14481 2012-10-30 10:41:55Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'index_edit.php');
 require './includes/session.php';
@@ -29,16 +27,16 @@ require './includes/session.php';
 $controller=new WT_Controller_Ajax();
 
 // Only one of $user_id and $gedcom_id should be set
-$user_id=safe_REQUEST($_REQUEST, 'user_id');
+$user_id = WT_Filter::get('user_id', WT_REGEX_INTEGER, WT_Filter::post('user_id', WT_REGEX_INTEGER));
 if ($user_id) {
-	$gedcom_id=null;
+	$gedcom_id = null;
 } else {
-	$gedcom_id=safe_REQUEST($_REQUEST, 'gedcom_id');
+	$gedcom_id = WT_Filter::get('gedcom_id', WT_REGEX_INTEGER, WT_Filter::post('gedcom_id', WT_REGEX_INTEGER));
 }
 
 // Only an admin can edit the "default" page
 // Only managers can edit the "home page"
-// Only a user or an admin can edit a user's "my page"
+// Only a user or an admin can edit a user’s "my page"
 if (
 	$gedcom_id<0 && !WT_USER_IS_ADMIN ||
 	$gedcom_id>0 && !userGedcomAdmin(WT_USER_ID, $gedcom_id) ||
@@ -49,7 +47,7 @@ if (
 	exit;
 }
 
-$action=safe_GET('action');
+$action = WT_Filter::get('action');
 
 if (isset($_REQUEST['main'])) {
 	$main=$_REQUEST['main'];
@@ -91,6 +89,7 @@ if ($user_id) {
 }
 
 if ($action=='update') {
+	Zend_Session::writeClose();
 	foreach (array('main', 'side') as $location) {
 		if ($location=='main') {
 			$new_blocks=$main;
@@ -238,11 +237,11 @@ $controller
 	var block_descr = new Array();
 	');
 
-	
+
 	// Load Block Description array for use by javascript
 	foreach ($all_blocks as $block_name=>$block) {
 		$controller->addInlineJavascript(
-			'block_descr["'.$block_name.'"] = "'.addslashes($block->getDescription()).'";'
+			'block_descr["'.$block_name.'"] = "'.WT_Filter::escapeJs($block->getDescription()).'";'
 		);
 	}
 	$controller->addInlineJavascript(
@@ -258,13 +257,13 @@ $controller
 // NOTE: Row 1: Column legends
 echo '<tr>';
 	echo '<td class="descriptionbox center vmiddle" colspan="2">';
-		echo '<b>', WT_I18N::translate('Main Section Blocks'), '</b>';
+		echo '<b>', WT_I18N::translate('Main section blocks'), '</b>';
 	echo '</td>';
 	echo '<td class="descriptionbox center vmiddle" colspan="3">';
-		echo '<b>', WT_I18N::translate('Available Blocks'), '</b>';
+		echo '<b>', WT_I18N::translate('Available blocks'), '</b>';
 	echo '</td>';
 	echo '<td class="descriptionbox center vmiddle" colspan="2">';
-		echo '<b>', WT_I18N::translate('Right Section Blocks'), '</b>';
+		echo '<b>', WT_I18N::translate('Right section blocks'), '</b>';
 	echo '</td>';
 echo '</tr>';
 echo '<tr>';
@@ -286,7 +285,7 @@ echo '<td class="optionbox center">';
 echo '</td>';
 // NOTE: Row 2 column 3: Left/Right buttons for left (main) block list
 echo '<td class="optionbox center vmiddle">';
-	echo '<a onclick="move_left_right_block(\'main_select\', \'right_select\');" title="', WT_I18N::translate('Move Right'), '"class="', $IconRDarrow, '"></a>';
+	echo '<a onclick="move_left_right_block(\'main_select\', \'right_select\');" title="', WT_I18N::translate('Move right'), '"class="', $IconRDarrow, '"></a>';
 	echo '<br>';
 	echo '<a onclick="move_left_right_block(\'main_select\', \'available_select\');" title="', WT_I18N::translate('Remove'), '"class="', $IconRarrow, '"></a>';
 	echo '<br>';
@@ -304,7 +303,7 @@ echo '<td class="optionbox center">';
 echo '</td>';
 // NOTE: Row 2 column 5: Left/Right buttons for right block list
 echo '<td class="optionbox center vmiddle">';
-	echo '<a onclick="move_left_right_block(\'right_select\', \'main_select\');" title="', WT_I18N::translate('Move Left'), '"class="', $IconLDarrow, '"></a>';
+	echo '<a onclick="move_left_right_block(\'right_select\', \'main_select\');" title="', WT_I18N::translate('Move left'), '"class="', $IconLDarrow, '"></a>';
 	echo '<br>';
 	echo '<a onclick="move_left_right_block(\'right_select\', \'available_select\');" title="', WT_I18N::translate('Remove'), '"class="', $IconLarrow, '"></a>';
 	echo '<br>';

@@ -2,10 +2,10 @@
 // Calculates the relationship between two individuals in the gedcom
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
-// Copyright (C) 2002 to 2009  PGV Development Team.  All rights reserved.
+// Copyright (C) 2002 to 2009 PGV Development Team.  All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,22 +19,20 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: relationship.php 14786 2013-02-06 22:28:50Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'relationship.php');
 require './includes/session.php';
 require WT_ROOT.'includes/functions/functions_edit.php';
 
-$controller=new WT_Controller_Page();
+$controller = new WT_Controller_Page();
 
-$pid1        =safe_GET_xref('pid1');
-$pid2        =safe_GET_xref('pid2');
-$show_full   =safe_GET('show_full', array('0', '1'), $PEDIGREE_FULL_DETAILS);
-$path_to_find=safe_GET('path_to_find', '[0-9]+', 0);
-$followspouse=safe_GET_bool('followspouse');
-$asc         =safe_GET_bool('asc');
+$pid1         = WT_Filter::get('pid1', WT_REGEX_XREF);
+$pid2         = WT_Filter::get('pid2', WT_REGEX_XREF);
+$show_full    = WT_Filter::getInteger('show_full', 0, 1, $PEDIGREE_FULL_DETAILS);
+$path_to_find = WT_Filter::getInteger('path_to_find');
+$followspouse = WT_Filter::getBool('followspouse');
+$asc          = WT_Filter::getBool('asc');
 
 $asc = $asc ? -1 : 1;
 
@@ -50,22 +48,21 @@ $Dbyspacing		= 0;
 $Dbasexoffset	= 0;
 $Dbaseyoffset	= 0;
 
-$person1=WT_Person::getInstance($pid1);
-$person2=WT_Person::getInstance($pid2);
+$person1=WT_Individual::getInstance($pid1);
+$person2=WT_Individual::getInstance($pid2);
 
 $controller
-	->addInlineJavascript('var pastefield; function paste_id(value) { pastefield.value=value; }') // For the 'find indi' link
 	->addExternalJavascript(WT_STATIC_URL.'js/autocomplete.js');
 
-if ($person1 && $person1->canDisplayName() && $person2 && $person2->canDisplayName()) {	
+if ($person1 && $person1->canShowName() && $person2 && $person2->canShowName()) {
 	$controller
 		->setPageTitle(WT_I18N::translate(/* I18N: %s are individual’s names */ 'Relationships between %1$s and %2$s', $person1->getFullName(), $person2->getFullName()))
 		->PageHeader();
-	$node=get_relationship($person1->getXref(), $person2->getXref(), $followspouse, 0, $path_to_find);
+	$node=get_relationship($person1, $person2, $followspouse, 0, $path_to_find);
 	// If no blood relationship exists, look for relationship via marriage
 	if ($path_to_find==0 && $node==false && $followspouse==false) {
 		$followspouse=true;
-		$node=get_relationship($person1->getXref(), $person2->getXref(), $followspouse, 0, $path_to_find);
+		$node=get_relationship($person1, $person2, $followspouse, 0, $path_to_find);
 	}
 	$disp=true;
 } else {
@@ -77,88 +74,89 @@ if ($person1 && $person1->canDisplayName() && $person2 && $person2->canDisplayNa
 }
 
 ?>
-<h2><?php echo $controller->getPageTitle(); ?></h2>
-<form name="people" method="get" action="relationship.php">
-	<input type="hidden" name="ged" value="<?php echo WT_GEDCOM; ?>">
-	<input type="hidden" name="path_to_find" value="0">
-	<table class="list_table">
-		<tr>
-			<td colspan="2" class="topbottombar center">
-				<?php echo WT_I18N::translate('Relationships'); ?>
-			</td>
-			<td colspan="2" class="topbottombar center">
-				<?php echo WT_I18N::translate('Options:'); ?>
-			</td>
-		</tr>
-		<tr>
-			<td class="descriptionbox">
-				<?php echo WT_I18N::translate('Person 1'); ?>
-			</td>
-			<td class="optionbox vmiddle">
-				<input tabindex="1" class="pedigree_form" type="text" name="pid1" id="pid1" size="3" value="<?php echo $pid1; ?>">
-				<?php echo print_findindi_link('pid1'); ?>
-			</td>
-			<td class="descriptionbox">
-				<?php echo WT_I18N::translate('Show Details'); ?>
-			</td>
-			<td class="optionbox vmiddle">
-				<?php echo two_state_checkbox('show_full', $show_full); ?>
-			</td>
-		</tr>
-		<tr>
-			<td class="descriptionbox">
-				<?php echo WT_I18N::translate('Person 2'); ?>
-			</td>
-			<td class="optionbox vmiddle">
-				<input tabindex="2" class="pedigree_form" type="text" name="pid2" id="pid2" size="3" value="<?php echo $pid2; ?>">
-				<?php echo print_findindi_link('pid2'); ?>
-			</td>
-			<td class="descriptionbox">
-				<?php echo WT_I18N::translate('Show oldest top'), help_link('oldest_top'); ?>
-			</td>
-			<td class="optionbox">
-				<input tabindex="4" type="checkbox" name="asc" value="1" <?php if ($asc==-1) echo ' checked="checked"'; ?>>
-			</td>
-		</tr>
-		<tr>
-			<td class="descriptionbox">
-				<?php
-				if ($path_to_find>0) {
-					echo WT_I18N::translate('Show path');
-				}
-				?>
-			</td>
-			<td class="optionbox">
-				<?php
-				for ($i=0; $i<$path_to_find; ++$i) {
-					echo ' <a href="relationship.php?pid1=', $pid1, '&amp;pid2=', $pid2, '&amp;path_to_find=', $i, '&amp;followspouse=', $followspouse, '&amp;show_full=', $show_full, '&amp;asc=', -$asc, '">', $i+1, '</a>';
-				}
-				?>
-			</td>
-			<td class="descriptionbox">
-				<?php echo WT_I18N::translate('Check relationships by marriage'), help_link('CHECK_MARRIAGE_RELATIONS'); ?>
-			</td>
-			<td class="optionbox" id="followspousebox">
-				<input tabindex="6" type="checkbox" name="followspouse" value="1" <?php if ($followspouse) { echo ' checked="checked"'; } ?> onclick="document.people.path_to_find.value='-1';" >
-			</td>
-		</tr>
-			<td class="topbottombar vmiddle center" colspan="2">
-				<?php
-			 	if ($node) {
-					echo '<input type="submit" value="', WT_I18N::translate('Find next path'), '" onclick="document.people.path_to_find.value=', $path_to_find+1, ';">';
-					echo help_link('next_path');
-				}
-				?>
-			</td>
-			<td class="topbottombar vmiddle center" colspan="2">
-				<input tabindex="7" type="submit" value="<?php echo WT_I18N::translate('View'); ?>">
-			</td>
-		</tr>
-	</table>
-</form>
+<div id="relationship-page">
+	<h2><?php echo $controller->getPageTitle(); ?></h2>
+	<form name="people" method="get" action="?">
+		<input type="hidden" name="ged" value="<?php echo WT_Filter::escapeHtml(WT_GEDCOM); ?>">
+		<input type="hidden" name="path_to_find" value="0">
+		<table class="list_table">
+			<tr>
+				<td colspan="2" class="topbottombar center">
+					<?php echo WT_I18N::translate('Relationships'); ?>
+				</td>
+				<td colspan="2" class="topbottombar center">
+					<?php echo WT_I18N::translate('Options:'); ?>
+				</td>
+			</tr>
+			<tr>
+				<td class="descriptionbox">
+					<?php echo WT_I18N::translate('Individual 1'); ?>
+				</td>
+				<td class="optionbox vmiddle">
+					<input tabindex="1" class="pedigree_form" type="text" name="pid1" id="pid1" size="3" value="<?php echo $pid1; ?>">
+					<?php echo print_findindi_link('pid1'); ?>
+				</td>
+				<td class="descriptionbox">
+					<?php echo WT_I18N::translate('Show details'); ?>
+				</td>
+				<td class="optionbox vmiddle">
+					<?php echo two_state_checkbox('show_full', $show_full); ?>
+				</td>
+			</tr>
+			<tr>
+				<td class="descriptionbox">
+					<?php echo WT_I18N::translate('Individual 2'); ?>
+				</td>
+				<td class="optionbox vmiddle">
+					<input tabindex="2" class="pedigree_form" type="text" name="pid2" id="pid2" size="3" value="<?php echo $pid2; ?>">
+					<?php echo print_findindi_link('pid2'); ?>
+				</td>
+				<td class="descriptionbox">
+					<?php echo WT_I18N::translate('Show oldest top'), help_link('oldest_top'); ?>
+				</td>
+				<td class="optionbox">
+					<input tabindex="4" type="checkbox" name="asc" value="1" <?php if ($asc==-1) echo ' checked="checked"'; ?>>
+				</td>
+			</tr>
+			<tr>
+				<td class="descriptionbox">
+					<?php
+					if ($path_to_find>0) {
+						echo WT_I18N::translate('Show path');
+					}
+					?>
+				</td>
+				<td class="optionbox">
+					<?php
+					for ($i=0; $i<$path_to_find; ++$i) {
+						echo ' <a href="relationship.php?pid1=', $pid1, '&amp;pid2=', $pid2, '&amp;path_to_find=', $i, '&amp;followspouse=', $followspouse, '&amp;show_full=', $show_full, '&amp;asc=', -$asc, '">', $i+1, '</a>';
+					}
+					?>
+				</td>
+				<td class="descriptionbox">
+					<?php echo WT_I18N::translate('Check relationships by marriage'), help_link('CHECK_MARRIAGE_RELATIONS'); ?>
+				</td>
+				<td class="optionbox" id="followspousebox">
+					<input tabindex="6" type="checkbox" name="followspouse" value="1" <?php if ($followspouse) { echo ' checked="checked"'; } ?> onclick="document.people.path_to_find.value='-1';" >
+				</td>
+			</tr>
+				<td class="topbottombar vmiddle center" colspan="2">
+					<?php
+					if ($node) {
+						echo '<input type="submit" value="', WT_I18N::translate('Find next path'), '" onclick="document.people.path_to_find.value=', $path_to_find+1, ';">';
+						echo help_link('next_path');
+					}
+					?>
+				</td>
+				<td class="topbottombar vmiddle center" colspan="2">
+					<input tabindex="7" type="submit" value="<?php echo WT_I18N::translate('View'); ?>">
+				</td>
+			</tr>
+		</table>
+	</form>
 
 <?php
-			
+
 $maxyoffset = $Dbaseyoffset;
 if ($person1 && $person2) {
 	if (!$disp) {
@@ -188,7 +186,7 @@ if ($person1 && $person2) {
 			$dmin=0;
 			$dmax=0;
 			$depth=0;
-			foreach ($node['path'] as $index=>$pid) {
+			foreach ($node['path'] as $index=>$person) {
 				if ($node['relations'][$index]=='father' || $node['relations'][$index]=='mother' || $node['relations'][$index]=='parent') {
 					$depth++;
 					if ($depth>$dmax) {
@@ -233,11 +231,10 @@ if ($person1 && $person2) {
 				$up_arrow   ='icon-darrow';
 				$down_arrow ='icon-uarrow';
 			}
-			foreach ($node['path'] as $index=>$pid) {
+			foreach ($node['path'] as $index=>$person) {
 				$linex = $xoffset;
 				$liney = $yoffset;
 				$mfstyle = 'NN';
-				$person=WT_Person::getInstance($pid);
 				switch ($person->getSex()) {
 				case 'M': $mfstyle='';   break;
 				case 'F': $mfstyle='F';  break;
@@ -284,6 +281,7 @@ if ($person1 && $person2) {
 						$joiny = $joiny+$asc*$lh;
 						echo "<div id=\"joinb", $index, "\" style=\"position:absolute; ", $TEXT_DIRECTION=='ltr'?'left':'right', ':', $joinx + $Dbxspacing, 'px; top:', $joiny + $Dbyspacing, "px;\" align=\"center\"><img src=\"", $WT_IMAGES["hline"], "\" align=\"left\" width=\"", $joinw, "\" height=\"", $joinh, "\" alt=\"\"></div>";
 					}
+					else $change_count='';
 					$previous='parent';
 					break;
 				case 'brother':
@@ -346,6 +344,7 @@ if ($person1 && $person2) {
 						$joiny = $joiny-$asc*$lh;
 						echo '<div id="joinb', $index, '" style="position:absolute; ', $TEXT_DIRECTION=='ltr'?'left':'right', ':', $joinx+$Dbxspacing, 'px; top:', $joiny+$Dbyspacing, 'px;" align="center"><img src="', $WT_IMAGES['hline'], '" align="left" width="', $joinw, '" height="', $joinh, '" alt=""></div>';
 					}
+					else $change_count='';
 					$previous='child';
 					break;
 				}
@@ -380,14 +379,15 @@ if ($person1 && $person2) {
 				// Determine the z-index for this box
 				$zIndex = 200 - ($colNum * $depth + $rowNum);
 
-				echo '<div id="box', $pid, '.0" style="position:absolute; ', $TEXT_DIRECTION=='ltr'?'left':'right', ':', $pxoffset, 'px; top:', $pyoffset, 'px; width:', $Dbwidth, 'px; height:', $Dbheight, 'px; z-index:', $zIndex, ';"><table><tr><td colspan="2" width="', $Dbwidth, '" height="', $Dbheight, '">';
-				print_pedigree_person(WT_Person::getInstance($pid), 1);
-				echo '</td></tr></table></div>';
+				echo '<div style="position:absolute; ', $TEXT_DIRECTION=='ltr'?'left':'right', ':', $pxoffset, 'px; top:', $pyoffset, 'px; width:', $Dbwidth, 'px; height:', $Dbheight, 'px; z-index:', $zIndex, ';">';
+				print_pedigree_person($person, 1);
+				echo '</div>';
 			}
 		}
-		echo '</div>'; // <div id="relationship_chart">
+		echo '</div>'; // close#relationship_chart
 	}
 }
+echo '</div>'; // close #relationshippage
 
 // The contents of <div id="relationship_chart"> use relative positions.
 // Need to expand the div to include the children, or we'll overlap the footer.

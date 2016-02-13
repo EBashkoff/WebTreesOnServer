@@ -2,9 +2,9 @@
 define('WT_SCRIPT_NAME', 'mymaps.php'); 
 require 'mysession.php';
 
-$update = safe_POST('update');
-$folder = safe_GET('folder');
-$shorthead = safe_GET('shorthead');
+$update = WT_Filter::post('update');
+$folder = WT_Filter::get('folder');
+$shorthead = WT_Filter::get('shorthead');
 
 // ************************  BEGIN = 'Build the filelist array' ************************
 
@@ -78,9 +78,8 @@ if (!empty($filelist)) {
         <link rel="stylesheet" href="js/jquerysmooth/css/smoothness/jquery-ui.min.css"/>
         <link rel="stylesheet" type="text/css" href="themes/olivegreen/style.css"/>
         <script type="text/javascript" src="js/modernizr.custom-2.6.2.js"></script>
-        <!--<script type="text/javascript" src="js/webtrees-1.4.1.js"></script>-->
-        <script type="text/javascript" src="js/jquery-1.9.1.js"></script>
-        <script type="text/javascript" src="js/jquery-ui-1.10.0.js"></script>
+        <script type="text/javascript" src="js/jquery-1.11.0.js"></script>
+        <script type="text/javascript" src="js/jquery-ui-1.10.4.js"></script>
         <script type="text/javascript" src="js/myGetWindowClientArea.js"></script>
         <!--Load progress bar below-->
         <script type="text/javascript">
@@ -541,9 +540,9 @@ if (!empty($filelist)) {
                     <span class="auto-style5small" style="float: left; font-weight: 900;"><?php echo $albumtitle; ?></span>
                     <span class="auto-style5small" style="float: right; margin-right: 12px; font-weight: initial;">
                         <?php
-                        $fltempstr = substr(dirname(__FILE__), strrpos(dirname(__FILE__), 'gallery'));
+                        $fltempstr = substr(dirname(__FILE__), strrpos(dirname(__FILE__), 'gallery')) . '/';
                         if ($uid != 0) {
-                            echo 'Logged in as: <a href="' . FILE_PATH_PREFIX . 'edituser.php" class="auto-style5small">' . $usrnm . '</a>',
+                            echo 'Logged in as: <a href="' . FILE_PATH_PREFIX . 'edituser.php" class="auto-style5small">' . $realusername . '</a>',
                             ' | <a  href="' . FILE_PATH_PREFIX . 'myportal.php?userid=' . $uid . '" class="auto-style5small">Home</a>',
                             ' | <a  href="' . FILE_PATH_PREFIX . 'myPicShow.php?folder=' . $folder . '&userid=' . $uid . '&album=' . $albumtitle . '" class="auto-style5small">Album</a>',
                             ' | <a  href="' . FILE_PATH_PREFIX . 'index.php?logout=1" class="auto-style5small">Logout</a>';

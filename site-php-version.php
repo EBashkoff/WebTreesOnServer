@@ -2,7 +2,7 @@
 // PHP version error
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2012 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: site-php-version.php 14537 2012-11-14 10:59:01Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'site-php-version.php');
+
+require 'library/autoload.php';
 
 // This script does not load session.php.
 // It may well invoke code that won’t run on PHP5.2…
@@ -33,23 +33,19 @@ define('WT_DATA_DIR', realpath('data').DIRECTORY_SEPARATOR);
 define('WT_DEBUG_LANG', false); // The translation library needs this
 $WT_SESSION=new stdClass();
 $WT_SESSION->locale='';
-// Invoke the Zend Framework Autoloader, so we can use Zend_XXXXX and WT_XXXXX classes
-set_include_path(WT_ROOT.'library'.PATH_SEPARATOR.get_include_path());
-require_once 'Zend/Loader/Autoloader.php';
-Zend_Loader_Autoloader::getInstance()->registerNamespace('WT_');
 require 'includes/functions/functions.php';
 require WT_ROOT.'includes/functions/functions_utf-8.php';
-define('WT_LOCALE', WT_I18N::init());
+define('WT_LOCALE', 'en');
 
-if (version_compare(PHP_VERSION, '5.3.3', '>=')) {
-	//header('Location: index.php');
+if (version_compare(PHP_VERSION, '5.3.2', '>=')) {
+	header('Location: index.php');
 }
 
 header('Content-Type: text/html; charset=UTF-8');
 
 ?>
 <!DOCTYPE html>
-<html <?php echo WT_I18N::html_markup(); ?>>
+<html lang="en">
 	<head>
 		<meta charset="UTF-8">
 		<title><?php echo WT_WEBTREES; ?></title>
@@ -67,23 +63,19 @@ header('Content-Type: text/html; charset=UTF-8');
 	</head>
 	<body>
 		<h1>
-			<?php echo WT_I18N::translate('This website is temporarily unavailable'); ?>
+			This website is temporarily unavailable
 		</h1>
 		<div class="content">
 			<p>
-				<?php echo WT_I18N::translate('This version of webtrees cannot be installed on this web-server.'); ?>
+				This version of webtrees cannot be installed on this web-server.
 			</p>
 			<p>
-				<?php echo WT_I18N::translate('You have the following options:'); ?>
+				You have the following options:
 			</p>
 			<ul>
-				<li><?php /* I18N: %s is a version number */ echo WT_I18N::translate('Upgrade the web-server to PHP %s or higher.', '5.3.3'); ?></li>
-				<li><?php /* I18N: %s is a version number */ echo WT_I18N::translate('Install (or re-install) webtrees %s.', '<a href="https://launchpad.net/webtrees/1.4/1.4.0/+download/webtrees-1.4.0.zip">1.4.0</a>'); ?></li>
+				<li>Upgrade the web-server from PHP <?php echo PHP_VERSION; ?> to PHP 5.3 or higher.</li>
+				<li>Install (or re-install) webtrees <a href="https://launchpad.net/webtrees/1.4/1.4.6/+download/webtrees-1.4.6.zip">1.4.6</a></li>
 			</ul>
-			<p class="good">
-				<?php echo WT_I18N::translate('If you cannot resolve the problem yourself, you can ask for help on the forums at <a href="http://webtrees.net">webtrees.net</a>'); ?>
-			</p>
 		</div>
-		<!-- <?php echo PHP_VERSION; ?> -->
 	</body>
 </html>

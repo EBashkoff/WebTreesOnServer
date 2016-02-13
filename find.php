@@ -2,10 +2,10 @@
 // Popup window that will allow a user to search for a family id, person id
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
-// Copyright (C) 2002 to 2009  PGV Development Team.  All rights reserved.
+// Copyright (C) 2002 to 2009 PGV Development Team.  All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,9 +19,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: find.php 14918 2013-03-26 08:22:33Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'find.php');
 require './includes/session.php';
@@ -29,15 +27,15 @@ require_once WT_ROOT.'includes/functions/functions_print_lists.php';
 
 $controller=new WT_Controller_Simple();
 
-$type           =safe_GET('type', WT_REGEX_ALPHA, 'indi');
-$filter         =safe_GET('filter');
-$action         =safe_GET('action');
-$callback       =safe_GET('callback', WT_REGEX_NOSCRIPT, 'paste_id');
-$media          =safe_GET('media');
-$all            =safe_GET_bool('all');
-$subclick       =safe_GET('subclick');
-$choose         =safe_GET('choose', WT_REGEX_NOSCRIPT, '0all');
-$qs             =safe_GET('tags');
+$type      = WT_Filter::get('type');
+$filter    = WT_Filter::get('filter');
+$action    = WT_Filter::get('action');
+$callback  = WT_Filter::get('callback', '[a-zA-Z0-9_]+', 'paste_id');
+$media     = WT_Filter::get('media');
+$all       = WT_Filter::getBool('all');
+$subclick  = WT_Filter::get('subclick');
+$choose    = WT_Filter::get('choose', '[a-zA-Z0-9_]+', '0all');
+$qs        = WT_Filter::get('tags');
 
 // Retrives the currently selected tags in the opener window (reading curTags value of the query string)
 // $preselDefault will be set to the array of DEFAULT preselected tags
@@ -92,7 +90,7 @@ case "source":
 	break;
 case "specialchar":
 	$controller->setPageTitle(WT_I18N::translate('Find a special character'));
-	$language_filter=safe_GET('language_filter');
+	$language_filter = WT_Filter::get('language_filter');
 	if (WT_USER_ID) {
 		// Users will probably always want the same language, so remember their setting
 		if (!$language_filter) {
@@ -184,7 +182,7 @@ if ($type == "indi") {
 	<span>', WT_I18N::translate('Name contains:'), '&nbsp;</span>
 	<input type="text" name="filter" value="';
 	if ($filter) echo $filter;
-	echo '">
+	echo '" autofocus>
 	<input type="submit" value="', WT_I18N::translate('Filter'), '">
 	</form></div>';
 }
@@ -199,7 +197,7 @@ if ($type == "fam") {
 	<span>', WT_I18N::translate('Name contains:'), '&nbsp;</span>
 	<input type="text" name="filter" value="';
 	if ($filter) echo $filter;
-	echo '">
+	echo '" autofocus>
 	<input type="submit" value="', WT_I18N::translate('Filter'), '">
 	</form></div>';
 }
@@ -216,10 +214,10 @@ if ($type == 'media') {
 	<span>', WT_I18N::translate('Media contains:'), '</span>
 	<input type="text" name="filter" value="';
 	if ($filter) echo $filter;
-	echo '">',
+	echo '" autofocus>',
 	help_link('simple_filter'),
 	'<p><input type="submit" name="search" value="', WT_I18N::translate('Filter'), '" onclick="this.form.subclick.value=this.name">&nbsp;
-	<input type="submit" name="all" value="', WT_I18N::translate('Display all'), '" onclick=\"this.form.subclick.value=this.name\">
+	<input type="submit" name="all" value="', WT_I18N::translate('Display all'), '" onclick="this.form.subclick.value=this.name">
 	</p></form></div>';
 }
 
@@ -234,7 +232,7 @@ if ($type == "place") {
 	<span>', WT_I18N::translate('Place contains:'), '</span>
 	<input type="text" name="filter" value="';
 	if ($filter) echo $filter;
-	echo '">
+	echo '" autofocus>
 	<p><input type="submit" name="search" value="', WT_I18N::translate('Filter'), '" onclick="this.form.subclick.value=this.name">&nbsp;
 	<input type="submit" name="all" value="', WT_I18N::translate('Display all'), '" onclick="this.form.subclick.value=this.name">
 	</p></form></div>';
@@ -251,7 +249,7 @@ if ($type == "repo") {
 	<span>', WT_I18N::translate('Repository contains:'), '</span>
 	<input type="text" name="filter" value="';
 	if ($filter) echo $filter;
-	echo '">
+	echo '" autofocus>
 	<p><input type="submit" name="search" value="', WT_I18N::translate('Filter'), '" onclick="this.form.subclick.value=this.name">&nbsp;
 	<input type="submit" name="all" value="', WT_I18N::translate('Display all'), '" onclick="this.form.subclick.value=this.name">
 	</td></tr></table>
@@ -266,10 +264,10 @@ if ($type == "note") {
 	<input type="hidden" name="type" value="note">
 	<input type="hidden" name="callback" value="', $callback, '">
 	<input type="hidden" name="subclick">
-	<span>', WT_I18N::translate('Shared Note contains:'), '</span>
+	<span>', WT_I18N::translate('Shared note contains:'), '</span>
 	<input type="text" name="filter" value="';
 	if ($filter) echo $filter;
-	echo '">
+	echo '" autofocus>
 	<p><input type="submit" name="search" value="', WT_I18N::translate('Filter'), '" onclick="this.form.subclick.value=this.name">&nbsp;
 	<input type="submit" name="all" value="', WT_I18N::translate('Display all'), '" onclick="this.form.subclick.value=this.name">
 	</p></form></div>';
@@ -286,7 +284,7 @@ if ($type == "source") {
 	<span>', WT_I18N::translate('Source contains:'), '</span>
 	<input type="text" name="filter" value="';
 	if ($filter) echo $filter;
-	echo '">
+	echo '" autofocus>
 	<p><input type="submit" name="search" value="', WT_I18N::translate('Filter'), '" onclick="this.form.subclick.value=this.name">&nbsp;
 	<input type="submit" name="all" value="', WT_I18N::translate('Display all'), '" onclick="this.form.subclick.value=this.name">
 	</p></form></div>';
@@ -336,23 +334,12 @@ if ($type == "facts") {
 	DefaultTag.prototype= {
 		_newCounter:0
 		,view:function() {
-			var row=document.createElement("tr"),cell,o;
+			var row=document.createElement("tr"),cell;
 			row.appendChild(cell=document.createElement("td"));
-			o=null;
-			if (document.all) {
-				//Old IEs handle the creation of a checkbox already checked, as far as I know, only in this way
-				try {
-					o=document.createElement("<input type='checkbox' id='tag"+this._counter+"' "+(this.selected?"checked='checked'":"")+">");
-				} catch(e) {
-					o=null;
-				}
-			}
-			if (!o) {
-				o=document.createElement("input");
-				o.setAttribute("id","tag"+this._counter);
-				o.setAttribute("type","checkbox");
-				if (this.selected) o.setAttribute("checked", "checked");
-			}
+			var o = document.createElement("input");
+			o.id = "tag"+this._counter;
+			o.type = "checkbox";
+			o.checked = this.selected;
 			o.DefaultTag=this;
 			o.ParentRow=row;
 			o.onclick=function() {
@@ -483,7 +470,7 @@ if ($type == "facts") {
 	<td><td></tbody></table>
 
 	<table id="tabAction"><tbody><tr>
-		<td colspan="2"><button id="btnOk" disabled="disabled" onclick="if (!this.disabled)DoOK();">', WT_I18N::translate('save'), '</button></td>
+		<td colspan="2"><button id="btnOk" disabled="disabled" onclick="if (!this.disabled) { DoOK(); }">', WT_I18N::translate('save'), '</button></td>
 	<tr></tbody></table>
 	</td></tr></table>
 	</form></div>';
@@ -550,9 +537,9 @@ if ($action=="filter") {
 				echo '<div class="find-media-thumb">', $media->displayImage(), '</div>';
 				echo '<div class="find-media-details">', $media->getFullName(), '</div>';
 				if (!$embed) {
-					echo '<p><a href="#" dir="auto" onclick="pasteid(\'', addslashes($media->getXref()), '\');">', $media->getFilename(), '</a></p>';
+					echo '<p><a href="#" dir="auto" onclick="pasteid(\'', $media->getXref(), '\');">', $media->getFilename(), '</a></p>';
 				} else {
-					echo '<p><a href="#" dir="auto" onclick="pasteid(\'', $media->getXref(), '\', \'', '\', \'', addslashes($media->getFilename()), '\');">', $media->getFilename(), '</a></p> ';
+					echo '<p><a href="#" dir="auto" onclick="pasteid(\'', $media->getXref(), '\', \'', '\', \'', WT_Filter::escapeJs($media->getFilename()), '\');">', WT_Filter::escapeHtml($media->getFilename()), '</a></p> ';
 				}
 				if ($media->fileExists()) {
 					$imgsize = $media->getImageAttributes();
@@ -560,23 +547,23 @@ if ($action=="filter") {
 				}
 				echo '<ul>';
 				$found=false;
-				foreach ($media->fetchLinkedIndividuals() as $indindividual) {
+				foreach ($media->linkedIndividuals('OBJE') as $indindividual) {
 					echo '<li>', $indindividual->getFullName(), '</li>';
 					$found=true;
 				}
-				foreach ($media->fetchLinkedFamilies() as $family) {
+				foreach ($media->linkedFamilies('OBJE') as $family) {
 					echo '<li>', $family->getFullName(), '</li>';
 					$found=true;
 				}
-				foreach ($media->fetchLinkedSources() as $source) {
+				foreach ($media->linkedSources('OBJE') as $source) {
 					echo '<li>', $source->getFullName(), '</li>';
 					$found=true;
 				}
-				foreach ($media->fetchLinkedNotes() as $note) {
+				foreach ($media->linkedNotes('OBJE') as $note) { // Invalid GEDCOM - you cannot link a NOTE to an OBJE
 					echo '<li>', $note->getFullName(), '</li>';
 					$found=true;
 				}
-				foreach ($media->fetchLinkedRepositories() as $repository) {
+				foreach ($media->linkedRepositories('OBJE') as $repository) { // Invalid GEDCOM - you cannot link a REPO to an OBJE
 					echo '<li>', $repository->getFullName(), '</li>';
 					$found=true;
 				}
@@ -603,7 +590,7 @@ if ($action=="filter") {
 		if ($places) {
 			echo '<ul>';
 			foreach ($places as $place) {
-				echo '<li><a href="#" onclick="pasteid(\'', htmlspecialchars($place->getGedcomName()), '\');">';
+				echo '<li><a href="#" onclick="pasteid(\'', WT_Filter::escapeJs($place->getGedcomName()), '\');">';
 				if (!$filter || $all) {
 					echo $place->getReverseName(); // When displaying all names, sort/display by the country, then region, etc.
 				} else {
@@ -658,7 +645,7 @@ if ($action=="filter") {
 				echo '<li><a href="', $note->getHtmlUrl(), '" onclick="pasteid(\'', $note->getXref(), '\');"><span class="list_item">', $note->getFullName(),'</span></a></li>';
 			}
 			echo '</ul>
-			<p>', WT_I18N::translate('Shared Notes found'), ' ', count($mynotelist), '</p>';
+			<p>', WT_I18N::translate('Shared notes found'), ' ', count($mynotelist), '</p>';
 		}
 		else {
 			echo '<p>', WT_I18N::translate('No results found.'), '</p>';
@@ -678,7 +665,9 @@ if ($action=="filter") {
 			usort($mysourcelist, array('WT_GedcomRecord', 'Compare'));
 			echo '<ul>';
 			foreach ($mysourcelist as $source) {
-				echo '<li><a href="', $source->getHtmlUrl(), '" onclick="pasteid(\'', $source->getXref(), '\');"><span class="list_item">', $source->getFullName(),'</span></a></li>';
+				echo '<li><a href="', $source->getHtmlUrl(), '" onclick="pasteid(\'', $source->getXref(), '\', \'',
+					WT_Filter::escapeJs($source->getFullName()), '\');"><span class="list_item">',
+					$source->getFullName(),'</span></a></li>';
 			}
 			echo '</ul>
 			<p>', WT_I18N::translate('Total sources: %s', count($mysourcelist)), '</p>';
@@ -710,4 +699,4 @@ if ($action=="filter") {
 	}
 }
 echo '<button onclick="window.close();">', WT_I18N::translate('close'), '</button>';
-echo "</div>"; // Close div="find-page"
+echo "</div>";

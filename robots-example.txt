@@ -1,6 +1,6 @@
 # robots.txt file for webtrees
 #
-# (c) Greg Roach, 2013
+# Copyright (C) Greg Roach 2014
 #
 # This file needs to be placed in the domain root folder,
 # such as "www.example.com/robots.txt".  It will not work in a
@@ -20,11 +20,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-# $Id: robots-example.txt 14626 2013-01-09 09:44:38Z greg $
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 # Well-behaved robots understand "Allow" directives.
+# Google (plus some others?) understands the "$" pattern match
 User-Agent: bingbot       # Bing
 User-Agent: Googlebot     # Google
 User-Agent: ia_archiver   # Internet Archive "wayback" machine
@@ -38,7 +37,6 @@ Allow: /family.php
 Allow: /index.php
 Allow: /indilist.php
 Allow: /individual.php
-Allow: /media.php
 Allow: /mediafirewall.php
 Allow: /mediaviewer.php
 Allow: /module.php?mod=sitemap
@@ -47,8 +45,12 @@ Allow: /repo.php
 Allow: /site-offline.php
 Allow: /site-unavailable.php
 Allow: /source.php
+Allow: /$
 Disallow: /
 
 # Disallow all other robots
 User-Agent: *
 Disallow: /
+
+# Put your sitemap here:
+#Sitemap: http://www.example.com/module.php?mod=sitemap&mod_action=generate&file=sitemap.xml

@@ -2,22 +2,22 @@
 define('WT_SCRIPT_NAME', 'mydownloadpics.php');
 require 'mysession.php';
 
-$update = safe_POST('update');
-$download = safe_POST('download');
+$update = WT_Filter::post('update');
+$download = WT_Filter::post('download');
 $dllist = array();
 
 if (($update && ($update == "Update")) || ($download && ($download == "Download"))) {  //  Form was posted to update
-    $picsize = strtolower(safe_POST('picsize', array('Full', 'Large', 'Medium', 'Small', 'Thumb'), 'full'));
-    $folder = safe_POST('folder');
-    $columns = safe_POST('columns', array('1', '2', '3', '4', '5'), '2');
-    $listview = safe_POST('listview');
-    $checkall = safe_POST('checkall');
+    $picsize = strtolower(WT_Filter::post('picsize', '[Ff]ull|[Ll]arge|[Mm]edium|[Ss]mall|[Tt]humb', 'full'));
+    $folder = WT_Filter::post('folder');
+    $columns = WT_Filter::post('columns', '1|2|3|4|5', '3');
+    $listview = WT_Filter::post('listview');
+    $checkall = WT_Filter::post('checkall');
 } else {  //  Direct call with URL and GET params
-    $picsize = strtolower(safe_GET('picsize', array('Full', 'Large', 'Medium', 'Small', 'Thumb'), 'full'));
-    $folder = safe_GET('folder');
-    $columns = safe_GET('columns', array('1', '2', '3', '4', '5'), '3');
-    $listview = safe_GET('listview');
-    $checkall = safe_GET('checkall');
+    $picsize = strtolower(WT_Filter::get('picsize', '[Ff]ull|[Ll]arge|[Mm]edium|[Ss]mall|[Tt]humb', 'full'));
+    $folder = WT_Filter::get('folder');
+    $columns = WT_Filter::get('columns', '1|2|3|4|5', '3');
+    $listview = WT_Filter::get('listview');
+    $checkall = WT_Filter::get('checkall');
 }
 // Specify default values for form
 
@@ -99,7 +99,7 @@ if ($download && ($download == "Download")) {
         <meta content="en-us" http-equiv="Content-Language" />
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
         <link rel="stylesheet" type="text/css" href="themes/olivegreen/style.css"/>
-        <script type="text/javascript" src="js/jquery-1.9.1.js"></script>
+        <script type="text/javascript" src="js/jquery-1.11.0.js"></script>
         <script type="text/javascript"  src="js/myDivPopupImage.js"></script>
         <script type="text/javascript">
             var tstate = false;

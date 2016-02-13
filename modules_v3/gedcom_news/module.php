@@ -2,7 +2,7 @@
 // Classes and libraries for module system
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2012 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
 // Copyright (C) 2010 John Finlay
@@ -19,9 +19,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: module.php 14686 2013-01-20 14:55:59Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 if (!defined('WT_WEBTREES')) {
 	header('HTTP/1.0 403 Forbidden');
@@ -51,9 +49,9 @@ class gedcom_news_WT_Module extends WT_Module implements WT_Module_Block {
 	public function getBlock($block_id, $template=true, $cfg=null) {
 		global $ctype;
 
-		switch (safe_GET('action')) {
+		switch (WT_Filter::get('action')) {
 		case 'deletenews':
-			$news_id=safe_GET('news_id');
+			$news_id=WT_Filter::get('news_id');
 			if ($news_id) {
 				deleteNews($news_id);
 			}
@@ -108,25 +106,23 @@ class gedcom_news_WT_Module extends WT_Module implements WT_Module_Block {
 				}
 			}
 			$content .= "<div class=\"news_box\" id=\"article{$news['id']}\">";
-			$content .= "<div class=\"news_title\">".htmlspecialchars($news['title']).'</div>';
+			$content .= "<div class=\"news_title\">".WT_Filter::escapeHtml($news['title']).'</div>';
 			$content .= "<div class=\"news_date\">".format_timestamp($news['date']).'</div>';
 			if ($news["text"]==strip_tags($news["text"])) {
-				// No HTML?
-				//$news["text"]=nl2br($news["text"], false);
-				$news["text"]=nl2br($news["text"]);
+				$news["text"]=nl2br($news["text"], false);
 			}
 			$content .= $news["text"];
 			// Print Admin options for this News item
 			if (WT_USER_GEDCOM_ADMIN) {
 				$content .= '<hr>'
-				."<a href=\"#\" onclick=\"window.open('editnews.php?news_id='+".$news['id'].", '_blank', indx_window_specs); return false;\">".WT_I18N::translate('Edit')."</a> | "
+				."<a href=\"#\" onclick=\"window.open('editnews.php?news_id='+".$news['id'].", '_blank', news_window_specs); return false;\">".WT_I18N::translate('Edit')."</a> | "
 				."<a href=\"index.php?action=deletenews&amp;news_id=".$news['id']."&amp;ctype={$ctype}\" onclick=\"return confirm('".WT_I18N::translate('Are you sure you want to delete this News entry?')."');\">".WT_I18N::translate('Delete')."</a><br>";
 			}
 			$content .= "</div>";
 		}
 		$printedAddLink = false;
 		if (WT_USER_GEDCOM_ADMIN) {
-			$content .= "<a href=\"#\" onclick=\"window.open('editnews.php?gedcom_id='+WT_GED_ID, '_blank', indx_window_specs); return false;\">".WT_I18N::translate('Add a News article')."</a>";
+			$content .= "<a href=\"#\" onclick=\"window.open('editnews.php?gedcom_id='+WT_GED_ID, '_blank', news_window_specs); return false;\">".WT_I18N::translate('Add a News article')."</a>";
 			$printedAddLink = true;
 		}
 		if ($limit=='date' || $limit=='count') {
@@ -159,14 +155,13 @@ class gedcom_news_WT_Module extends WT_Module implements WT_Module_Block {
 
 	// Implement class WT_Module_Block
 	public function configureBlock($block_id) {
-		if (safe_POST_bool('save')) {
-			set_block_setting($block_id, 'limit', safe_POST('limit'));
-			set_block_setting($block_id, 'flag',  safe_POST('flag'));
+		if (WT_Filter::postBool('save') && WT_Filter::checkCsrf()) {
+			set_block_setting($block_id, 'limit', WT_Filter::post('limit'));
+			set_block_setting($block_id, 'flag',  WT_Filter::post('flag'));
 			exit;
 		}
 
 		require_once WT_ROOT.'includes/functions/functions_edit.php';
-
 
 		// Limit Type
 		$limit=get_block_setting($block_id, 'limit', 'nolimit');

@@ -1,11 +1,11 @@
 <?php
 //  This runs the galleria photo viewer for all pics on the website
-//  GET params are folder=gallery/.../images; userid=#; type=computer, phone, tablet; height=# pixels 
+//  GET params are folder=gallery/.../images; userid=#
 define('WT_SCRIPT_NAME', 'myPicShow.php');
 
 require 'mysession.php';
 
-$folder = safe_GET('folder');
+$folder = WT_Filter::get('folder');
 $folder = ($folder) ? $folder : 'gallery/2001%20Fall/images';
 $resourcefile = str_replace('/images', '', $folder) . '/resources/mediaGroupData/group.xml';  //  Get Adode Lightroom Flash Player album description and title
 $resourcedoc = new DOMDocument();
@@ -14,9 +14,7 @@ $albumtitle = $resourcedoc->getElementsByTagName('groupTitle')->item(0)->nodeVal
 $albumdescription = $resourcedoc->getElementsByTagName('groupDescription')->item(0)->nodeValue;
 //echo 'Resource Folder: ' . $resourcefile . ', Album title: ' . $albumtitle . ', Album description: ' . $albumdescription . '<br>';
 
-//$devicetype = safe_GET('type');
-//$deviceheight = safe_GET('height');
-$picsize = ($devicetype == 'phone') ? 'small' : 'medium';  //  Set resoltion for phone and all others
+$picsize = ($devicetype == 'phone') ? 'small' : 'medium';  //  Set resolution for phone and all others
 $medialist = (($folder) ? scandir($folder . '/' . $picsize) : array()); //  $picsize is full/large/medium/small/thumb
 
 $ct = 0;
@@ -121,10 +119,11 @@ if (!empty($medialist)) {
     <head>
         <meta content="en-us" http-equiv="Content-Language" />
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-        <script src="js/jquery-1.9.1.js"></script>
+        <script src="js/jquery-1.11.0.js"></script>
         <script src="js/galleria/galleria-1.3.5.min.js"></script>
         <link rel="stylesheet" href="js/galleria/themes/azur/galleria.azur.css"></link>
         <script src="js/galleria/themes/azur/galleria.azur.min.js"></script>
+        <script type="text/javascript" src="js/myGetWindowClientArea.js"></script>
         <title>Bashkoff Family Website</title>
         <style type="text/css">
             .auto-style4 {
@@ -160,10 +159,11 @@ if (!empty($medialist)) {
         <div id="outerframe" style="border: 3px solid #86815F;  background-color:white; position: relative; margin:auto; padding-bottom:4px; z-index: 1; top: 0px; left: 0px; color: #FFFFFF; visibility: visible;">
             <script type="text/javascript">
                 function adjustwindowsize(screenwidth, screenheight) {
+                    var winClientArea = getWindowClientArea();
                     if (document.getElementById("galleria"))
-                        document.getElementById("galleria").style.height=(screenheight - (("<?php echo $devicetype; ?>" != 'computer') ? (("<?php echo $devicetype; ?>" === 'phone') ? 55 : 52) : 102)) + "px";
-                    document.getElementById("outerframe").style.height=(screenheight - (("<?php echo $devicetype; ?>" != 'computer') ? (("<?php echo $devicetype; ?>" === 'phone') ? 10 : 9) : 30)) + "px";
-                    document.getElementById("outerframe").style.width=(screenwidth - (("<?php echo $devicetype; ?>" != 'computer') ? (("<?php echo $devicetype; ?>" === 'phone') ? 10 : 9) : 32)) + "px";
+                        document.getElementById("galleria").style.height=(screenheight - ((winClientArea['type'] != 'computer') ? ((winClientArea['type'] === 'phone') ? 55 : 52) : 102)) + "px";
+                    document.getElementById("outerframe").style.height=(screenheight - ((winClientArea['type'] != 'computer') ? ((winClientArea['type'] === 'phone') ? 10 : 9) : 30)) + "px";
+                    document.getElementById("outerframe").style.width=(screenwidth - ((winClientArea['type'] != 'computer') ? ((winClientArea['type'] === 'phone') ? 10 : 9) : 32)) + "px";
                 }
                 adjustwindowsize($(window).width(), $(window).height());
             </script>
@@ -210,13 +210,14 @@ if (!empty($medialist)) {
             <div id="limebar" style="margin:auto; width: 99%; text-align: center; padding-left: 0px; padding-right: 0px; padding-top: 0px; color: #36341A; background-color: #9D9248; visibility: visible; position: relative; top: 0px; left: 0px; z-index: 2;">
             </div>
             <script type="text/javascript">
-                if (<?php echo '"' . $devicetype . '"'; ?> !== "computer") {
+                var winClientArea = getWindowClientArea();
+                if (winClientArea['type'] !== "computer") {
                     document.getElementById("fullhead").style.display = "none";
                     document.getElementById("shorthead").style.display = "block";
                     document.getElementById("limebar").style.height = "4px";
                     document.getElementById("outerframe").style.position = "absolute";
                     document.getElementById("outerframe").style.width = "99%";
-                    if (<?php echo '"' . $devicetype . '"'; ?> === "tablet") {
+                    if (winClientArea['type'] === "tablet") {
                         document.getElementById("outerframe").style.height = "99%";
                     }
                 } else {
@@ -227,6 +228,7 @@ if (!empty($medialist)) {
             </script>
             <div id="galleria" align="center" style="margin:auto; width: 99%; height: 100%; text-align: center; padding-left: 0px; padding-right: 0px; padding-top: 0px; color: #36341A; background-color: #FFFFFF; visibility: visible; position: relative; top: 0px; left: 0px; z-index: 2;">
                 <script>
+                    var winClientArea = getWindowClientArea();
                     adjustwindowsize($(window).width(), $(window).height());
                     var data = <?php echo $galleriadata; ?>
 
@@ -235,11 +237,12 @@ if (!empty($medialist)) {
                         debug: false,
                         imageCrop: 'height',
                         dummy: 'themes/olivegreen/images/silhouette_unknown.png',
-                        lightbox: <?php echo (($devicetype === 'computer') ? 'true' : 'false'); ?>,
-                        fullscreenDoubleTap: <?php echo (($devicetype == 'phone') ? 'true' : 'false'); ?>,
-                        thumbnails: <?php echo (($devicetype !== 'phone') ? '"lazy"' : 'false'); ?>,
+                        lightbox: (winClientArea['type'] === 'computer'),
+                        fullscreenDoubleTap: (winClientArea['type'] === 'phone'),
+                        thumbnails: (winClientArea['type'] !== 'phone') ? 'lazy' : false,
+                        thumbMargin: -10,
                         extend: function() {
-                            <?php echo (($devicetype !== 'phone') ? 'this.lazyLoadChunks(10);' : ''); ?>
+                            if (winClientArea['type'] !== 'phone') this.lazyLoadChunks(10);
                             this.setPlaytime(3000);
                             this.attachKeyboard({
                                 left: this.prev,

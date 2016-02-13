@@ -28,13 +28,12 @@ if (!$con) {
     die('Could not connect to update browser parameters: ' . mysql_error());
 }
 mysql_select_db($dbconfig['dbname'], $con);
-$qq = "UPDATE wt_session SET session_height=". safe_GET('height') . ", session_type='" . safe_GET('type') . "' WHERE session_id='" . $_COOKIE[WT_SESSION_NAME]. "';";
+$qq = "UPDATE wt_session SET session_height=". WT_Filter::get('height') . ", session_type='" . WT_Filter::get('type') . "' WHERE session_id='" . $_COOKIE[WT_SESSION_NAME]. "';";
 mysql_query($qq, $con);
 mysql_close($con);
 
 ?>
-<head></head>
-<body>test</body>
+
 
 
 

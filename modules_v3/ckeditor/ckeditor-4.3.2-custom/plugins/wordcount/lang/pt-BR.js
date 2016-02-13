@@ -1,0 +1,1 @@
+CKEDITOR.plugins.setLang("wordcount","pt-BR",{WordCount:"Contagem de palavras:",CharCount:"Contagem de caracteres:",limit:"Limit:",title:"Estat\u00edsticas"});

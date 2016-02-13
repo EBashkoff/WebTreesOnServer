@@ -1,14 +1,8 @@
 <?php
 // Check a family tree for structural errors.
 //
-// Note that the tests and error messages are not yet finalised.  Wait until the code has stabilised before
-// adding I18N.
-//
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
-//
-// Derived from PhpGedView
-// Copyright (C) 2006-2009 Greg Roach, all rights reserved
+// Copyright (C) 2014 Greg Roach
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,9 +16,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//$Id: admin_trees_check.php 14902 2013-03-24 08:18:11Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'admin_trees_check.php');
 require './includes/session.php';
@@ -42,7 +34,7 @@ echo select_edit_control('ged', WT_Tree::getNameList(), null, WT_GEDCOM);
 echo '<input type="submit" value="', $controller->getPageTitle(), '">';
 echo '</form>';
 
-if (!safe_GET('go')) {
+if (!WT_Filter::get('go')) {
 	exit;
 }
 
@@ -101,6 +93,7 @@ $XREF_LINKS=array(
 	'SOUR'          => 'SOUR',
 	'REPO'          => 'REPO',
 	'OBJE'          => 'OBJE',
+	'SUBM'          => 'SUBM',
 	'FAMC'          => 'FAM',
 	'FAMS'          => 'FAM',
 	//'ADOP'=>'FAM', // Need to handle this case specially.  We may have both ADOP and FAMC links to the same FAM, but only store one.
@@ -113,18 +106,20 @@ $XREF_LINKS=array(
 	'AUTH'          => 'INDI', // A webtrees extension
 	'ANCI'          => 'SUBM',
 	'DESI'          => 'SUBM',
-	'_WT_OBJE_SORT' => 'OBJE'
+	'_WT_OBJE_SORT' => 'OBJE',
+	'_LOC'          => '_LOC',
 );
 
 $RECORD_LINKS=array(
-	'INDI'=>array('NOTE', 'OBJE', 'SOUR', 'ASSO', '_ASSO', 'FAMC', 'FAMS', 'ALIA', '_WT_OBJE_SORT'),
-	'FAM' =>array('NOTE', 'OBJE', 'SOUR', 'ASSO', '_ASSO', 'HUSB', 'WIFE', 'CHIL'),
+	'INDI'=>array('NOTE', 'OBJE', 'SOUR', 'SUBM', 'ASSO', '_ASSO', 'FAMC', 'FAMS', 'ALIA', '_WT_OBJE_SORT', '_LOC'),
+	'FAM' =>array('NOTE', 'OBJE', 'SOUR', 'SUBM', 'ASSO', '_ASSO', 'HUSB', 'WIFE', 'CHIL', '_LOC'),
 	'SOUR'=>array('NOTE', 'OBJE', 'REPO', 'AUTH'),
 	'REPO'=>array('NOTE'),
 	'OBJE'=>array('NOTE'), // The spec also allows SOUR, but we treat this as a warning
 	'NOTE'=>array(), // The spec also allows SOUR, but we treat this as a warning
-	'SUBM'=>array(),
-	'SUBN'=>array(),
+	'SUBM'=>array('NOTE', 'OBJE'),
+	'SUBN'=>array('SUBM'),
+	'_LOC'=>array('SOUR', 'OBJE', '_LOC'),
 );
 
 $errors=false;
@@ -168,6 +163,10 @@ foreach ($all_links as $xref1=>$links) {
 			//echo warning(WT_I18N::translate('The note %1$s has a source %2$s. Notes are intended to add explanations and comments to other records.  They should not have their own sources.'), format_link($xref1), format_link($xref2));
 		} elseif ($type2=='SOUR' && $type1=='OBJE') {
 			//echo warning(WT_I18N::translate('The media object %1$s has a source %2$s. Media objects are intended to illustrate other records, facts, and source/citations.  They should not have their own sources.', format_link($xref1), format_link($xref2)));
+		} elseif ($type2=='OBJE' && $type1=='REPO') {
+			echo warning(
+				link_message($type1, $xref1, $type2, $xref2) . ' ' .  WT_I18N::translate('This type of link is not allowed here.')
+			);
 		} elseif (!array_key_exists($type1, $RECORD_LINKS) || !in_array($type2, $RECORD_LINKS[$type1]) || !array_key_exists($type2, $XREF_LINKS)) {
 			echo error(
 				link_message($type1, $xref1, $type2, $xref2).' '.

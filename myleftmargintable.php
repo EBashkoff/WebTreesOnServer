@@ -318,25 +318,33 @@
             <ul class="second-level">
                 <li><a title="Winter 2013-2014 Pictures" href="<?php echo 'myPicShow.php?folder=gallery/2013 Winter/images&userid=' . $uid; ?>">Winter 2013-2014</a>
                 </li>
-            </ul>
+            <li><a title="Caribbean Cruise" href="<?php echo 'myPicShow.php?folder=gallery/Vacation 2014/RCCL Liberty of the Seas/images&userid=' . $uid; ?>">RCCL Liberty of the Seas</a></li><li><a title="Spring 2014 Pictures" href="<?php echo 'myPicShow.php?folder=gallery/2014 Spring/images&userid=' . $uid; ?>">Spring</a></li><li><a title="30th Reunion Pictures" href="<?php echo 'myPicShow.php?folder=gallery/Vacation 2014/Princeton Reunion/images&userid=' . $uid; ?>">Princeton Reunion</a></li><li><a title="Pictures in Rye, NY and New Haven, CT" href="<?php echo 'myPicShow.php?folder=gallery/Vacation 2014/HL 50th Anniversary/images&userid=' . $uid; ?>">Harvey & Laurane 50th Anniversary</a></li><li><a title="Vancouver, BC Trip Pictures" href="<?php echo 'myPicShow.php?folder=gallery/Vacation 2014/Vancouver/images&userid=' . $uid; ?>">Vancouver</a></li><li><a title="Fall 2014 Pictures" href="<?php echo 'myPicShow.php?folder=gallery/2014 Fall/images&userid=' . $uid; ?>">Fall</a></li><li><a title="San Diego Trip Pictures" href="<?php echo 'myPicShow.php?folder=gallery/Vacation 2014/San Diego/images&userid=' . $uid; ?>">San Diego</a></li><li><a title="Celebrity Reflection Cruise Pictures" href="<?php echo 'myPicShow.php?folder=gallery/Vacation 2014/Celebrity Reflection/images&userid=' . $uid; ?>">Celebrity Reflection</a></li><li><a title="Winter 2014-2015 Pictures" href="<?php echo 'myPicShow.php?folder=gallery/2014 Winter/images&userid=' . $uid; ?>">Winter 2014-2015</a></li></ul>
         </li>
-        <li><a href="#">Archive Album 1</a>
+        <li><a href="#">2015</a><ul class="second-level"><li><a title="Caribbean Cruise" href="<?php echo 'myPicShow.php?folder=gallery/Vacation 2015/RCCL Liberty of the Seas/images&userid=' . $uid; ?>">RCCL Liberty of the Seas</a></li><li><a title="Winter 2014-2015 Pictures" href="<?php echo 'myPicShow.php?folder=gallery/2014 Winter/images&userid=' . $uid; ?>">Winter 2014-2015</a></li><li><a title="Puerto Vallarta Pictures" href="<?php echo 'myPicShow.php?folder=gallery/Vacation 2015/Puerto Vallarta/images&userid=' . $uid; ?>">Puerto Vallarta</a></li><li><a title="Spring 2015 Pictures" href="<?php echo 'myPicShow.php?folder=gallery/2015 Spring/images&userid=' . $uid; ?>">Spring</a></li><li><a title="Summer 2015 Pictures" href="<?php echo 'myPicShow.php?folder=gallery/2015 Summer/images&userid=' . $uid; ?>">Summer</a></li></ul></li><li><a href="#">Archive Album 1</a>
             <ul class="second-level">
                 <li><a title="Scanned Photos From Eric & Debby's Wedding" href="<?php echo 'myPicShow.php?folder=gallery/Albums%201-4/Debby%20and%20Eric%20Wedding/images&userid=' . $uid; ?>">Debby & Eric Wedding Scanned Photos</a>
                 </li>
                 <li><a title="Scanned Photos From 1986" href="<?php echo 'myPicShow.php?folder=gallery/Albums%201-4/1986/images&userid=' . $uid; ?>">1986 Scanned Photos</a>
                 </li>
-                <li><a title="Scanned Photos From Mount Sinai" href="<?php echo 'myPicShow.php?folder=gallery/Albums%201-4/Mount%20Sinai/images&userid=' . $uid; ?>">Mount Sinai</a>
-                </li>
-            </ul>
+            <li><a title="Scanned Photos From 1987" href="<?php echo 'myPicShow.php?folder=gallery/Albums 1-4/1987/images&userid=' . $uid; ?>">1987 Scanned Photos</a></li>
+						<li><a title="Scanned Photos From 1988" href="<?php echo 'myPicShow.php?folder=gallery/Albums 1-4/1988/images&userid=' . $uid; ?>">1988 Scanned Photos</a></li>
+						<li><a title="Scanned Photos From 1986" href="<?php echo 'myPicShow.php?folder=gallery/Albums 1-4/1989/images&userid=' . $uid; ?>">1989 Scanned Photos</a></li>
+						<li><a title="Scanned Photos From 1990" href="<?php echo 'myPicShow.php?folder=gallery/Albums 1-4/1990/images&userid=' . $uid; ?>">1990 Scanned Photos</a></li>
+						</ul>
         </li>
         <li><a href="#">Archive Album 2</a>
             <ul class="second-level">
+                <li><a title="Scanned Photos From 1991" href="<?php echo 'myPicShow.php?folder=gallery/Albums 5-8/1991/images&userid=' . $uid; ?>">1991 Scanned Photos</a>
+                </li>
                 <li><a title="Scanned Photos From 1992" href="<?php echo 'myPicShow.php?folder=gallery/Albums 5-8/1992/images&userid=' . $uid; ?>">1992 Scanned Photos</a>
                 </li>
                 <li><a title="Scanned Photos From 1993" href="<?php echo 'myPicShow.php?folder=gallery/Albums 5-8/1993/images&userid=' . $uid; ?>">1993 Scanned Photos</a>
                 </li>
-            </ul>
+                <li><a title="Scanned Photos From 1994" href="<?php echo 'myPicShow.php?folder=gallery/Albums 5-8/1994/images&userid=' . $uid; ?>">1994 Scanned Photos</a>
+                </li>
+                <li><a title="Scanned Photos From 1995" href="<?php echo 'myPicShow.php?folder=gallery/Albums 5-8/1995/images&userid=' . $uid; ?>">1995 Scanned Photos</a>
+                </li>
+             </ul>
         </li>
         <li><a href="#">House</a>
             <ul class="second-level">
@@ -366,7 +374,7 @@
                 </li>
                 <li><a title="" href="<?php echo 'myPicShow.php?folder=gallery/House/Workstation/images&userid=' . $uid; ?>">Workstation</a>
                 </li>
-            </ul>
+            <li><a title="" href="<?php echo 'myPicShow.php?folder=gallery/House/Phase 5/images&userid=' . $uid; ?>">Phase 5</a></li></ul>
         </li>
         <li><a href="#">Others</a>
             <ul class="second-level">
@@ -374,7 +382,7 @@
                 </li>
                 <li><a title="" href="<?php echo 'myPicShow.php?folder=gallery/Others/Bernie%20Army/images&userid=' . $uid; ?>">Bernard Bashkoff Army</a>
                 </li>
-            </ul>
+            <li><a title="Allie Senior Photos" href="<?php echo 'myPicShow.php?folder=gallery/Others/Allie Senior Photos/images&userid=' . $uid; ?>">Allie Senior Photos</a></li></ul>
         </li>
     </ul>
 </div>

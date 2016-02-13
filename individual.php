@@ -4,10 +4,10 @@
 // Display all of the information about an individual
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
-// Copyright (C) 2002 to 2011  PGV Development Team.  All rights reserved.
+// Copyright (C) 2002 to 2011 PGV Development Team.  All rights reserved.
 //
 // Sidebar controls courtesy of http://devheart.org/articles/jquery-collapsible-sidebar-layout/
 //
@@ -23,19 +23,16 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: individual.php 14806 2013-02-15 21:01:05Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'individual.php');
 require './includes/session.php';
 $controller=new WT_Controller_Individual();
 $controller
-	->addExternalJavascript(WT_JQUERY_COOKIE_URL) // We use this to record the sidebar state
-	->addInlineJavascript('var catch_and_ignore; function paste_id(value) {catch_and_ignore = value;}'); // For the "find" links
-	
-if ($controller->record && $controller->record->canDisplayDetails()) {
-	if (safe_GET('action')=='ajax') {
+	->addExternalJavascript(WT_JQUERY_COOKIE_URL); // We use this to record the sidebar state
+
+if ($controller->record && $controller->record->canShow()) {
+	if (WT_Filter::get('action')=='ajax') {
 		$controller->ajaxRequest();
 		exit;
 	}
@@ -44,14 +41,14 @@ if ($controller->record && $controller->record->canDisplayDetails()) {
 	$sidebar_html=$controller->getSideBarContent();
 
 	$controller->pageHeader();
-	if ($controller->record->isMarkedDeleted()) {
+	if ($controller->record->isOld()) {
 		if (WT_USER_CAN_ACCEPT) {
 			echo
 				'<p class="ui-state-highlight">',
 				/* I18N: %1$s is “accept”, %2$s is “reject”.  These are links. */ WT_I18N::translate(
 					'This individual has been deleted.  You should review the deletion and then %1$s or %2$s it.',
-					'<a href="#" onclick="jQuery.post(\'action.php\',{action:\'accept-changes\',xref:\''.$controller->record->getXref().'\'},function(){location.reload();})">' . WT_I18N::translate_c('You should review the deletion and then accept or reject it.', 'accept') . '</a>',
-					'<a href="#" onclick="jQuery.post(\'action.php\',{action:\'reject-changes\',xref:\''.$controller->record->getXref().'\'},function(){location.reload();})">' . WT_I18N::translate_c('You should review the deletion and then accept or reject it.', 'reject') . '</a>'
+					'<a href="#" onclick="accept_changes(\''.$controller->record->getXref().'\');">' . WT_I18N::translate_c('You should review the deletion and then accept or reject it.', 'accept') . '</a>',
+					'<a href="#" onclick="reject_changes(\''.$controller->record->getXref().'\');">' . WT_I18N::translate_c('You should review the deletion and then accept or reject it.', 'reject') . '</a>'
 				),
 				' ', help_link('pending_changes'),
 				'</p>';
@@ -62,14 +59,14 @@ if ($controller->record && $controller->record->canDisplayDetails()) {
 				' ', help_link('pending_changes'),
 				'</p>';
 		}
-	} elseif (find_updated_record($controller->record->getXref(), WT_GED_ID)!==null) {
+	} elseif ($controller->record->isNew()) {
 		if (WT_USER_CAN_ACCEPT) {
 			echo
 				'<p class="ui-state-highlight">',
 				/* I18N: %1$s is “accept”, %2$s is “reject”.  These are links. */ WT_I18N::translate(
 					'This individual has been edited.  You should review the changes and then %1$s or %2$s them.',
-					'<a href="#" onclick="jQuery.post(\'action.php\',{action:\'accept-changes\',xref:\''.$controller->record->getXref().'\'},function(){location.reload();})">' . WT_I18N::translate_c('You should review the changes and then accept or reject them.', 'accept') . '</a>',
-					'<a href="#" onclick="jQuery.post(\'action.php\',{action:\'reject-changes\',xref:\''.$controller->record->getXref().'\'},function(){location.reload();})">' . WT_I18N::translate_c('You should review the changes and then accept or reject them.', 'reject') . '</a>'
+					'<a href="#" onclick="accept_changes(\''.$controller->record->getXref().'\');">' . WT_I18N::translate_c('You should review the changes and then accept or reject them.', 'accept') . '</a>',
+					'<a href="#" onclick="reject_changes(\''.$controller->record->getXref().'\');">' . WT_I18N::translate_c('You should review the changes and then accept or reject them.', 'reject') . '</a>'
 				),
 				' ', help_link('pending_changes'),
 				'</p>';
@@ -81,7 +78,7 @@ if ($controller->record && $controller->record->canDisplayDetails()) {
 				'</p>';
 		}
 	}
-} elseif ($controller->record && $controller->record->canDisplayName()) {
+} elseif ($controller->record && $controller->record->canShowName()) {
 	// Just show the name.
 	$controller->pageHeader();
 	echo '<h2>', $controller->record->getFullName(), '</h2>';
@@ -99,12 +96,23 @@ $linkToID=$controller->record->getXref(); // -- Tell addmedia.php what to link t
 $controller->addInlineJavascript('
 	jQuery("#tabs").tabs({
 		spinner: \'<i class="icon-loading-small"></i>\',
-		cache:    true,
 		active:   jQuery.cookie("indi-tab"),
-		activate: function(event, ui) { jQuery.cookie("indi-tab", jQuery("#tabs").tabs("option", "active")); }
+		activate: function(event, ui) {
+			jQuery.cookie("indi-tab", jQuery("#tabs").tabs("option", "active"));
+		},
+		// Only load each tab once
+		beforeLoad: function(event, ui) {
+			if (ui.tab.data("loaded")) {
+				event.preventDefault();
+				return;
+			}
+			ui.jqXHR.success(function() {
+				ui.tab.data("loaded", true);
+			});
+		}
 	});
 
-	// sidebar settings 
+	// sidebar settings
 	// Variables
 	var objMain			= jQuery("#main");
 	var objTabs			= jQuery("#indi_left");
@@ -155,14 +163,13 @@ $controller->addInlineJavascript('
 	}
 	adjHeader();
 	jQuery("#main").css("visibility", "visible");
-	
+
 	function show_gedcom_record() {
 		var recwin=window.open("gedrecord.php?pid='. $controller->record->getXref(). '", "_blank", edit_window_specs);
-	}	
+	}
 
 	jQuery("#header_accordion1").accordion({
 		active: 0,
-		icons: {"header": "ui-icon-triangle-1-s", "headerSelected": "ui-icon-triangle-1-n" },
 		heightStyle: "content",
 		collapsible: true
 	});
@@ -174,10 +181,9 @@ echo
 	'<div id="main" class="use-sidebar sidebar-at-right" style="visibility:hidden;">', //overall page container
 	'<div id="indi_left">',
 	'<div id="indi_header">';
-if ($controller->record->canDisplayDetails()) {
+if ($controller->record->canShow()) {
 	// Highlight image or silhouette
 	echo '<div id="indi_mainimage">', $controller->record->displayImage(), '</div>';
-	$globalfacts=$controller->getGlobalFacts();
 	echo '<div id="header_accordion1">'; // contain accordions for names
 	echo '<h3 class="name_one ', $controller->getPersonStyle($controller->record), '"><span>', $controller->record->getFullName(), '</span>'; // First name accordion header
 	$bdate=$controller->record->getBirthDate();
@@ -193,17 +199,22 @@ if ($controller->record->canDisplayDetails()) {
 	echo '</span>';
 	// Display summary birth/death info.
 	echo '<span id="dates">', $controller->record->getLifeSpan(), '</span>';
-	//Display gender icon
-	foreach ($globalfacts as $key=>$value) {
-		$fact = $value->getTag();
-		if ($fact=="SEX") $controller->print_sex_record($value);
+
+	// Display gender icon
+	foreach ($controller->record->getFacts() as $fact) {
+		if ($fact->getTag() == 'SEX') {
+			$controller->print_sex_record($fact);
+		}
 	}
-	echo '</h3>'; // close first name accordion header	
-	//Display name details
-	foreach ($globalfacts as $key=>$value) {
-		$fact = $value->getTag();
-		if ($fact=="NAME") $controller->print_name_record($value);
+	echo '</h3>'; // close first name accordion header
+
+	// Display name details
+	foreach ($controller->record->getFacts() as $fact) {
+		if ($fact->getTag() == 'NAME') {
+			$controller->print_name_record($fact);
+		}
 	}
+
 	echo '</div>'; // close header_accordion1
 }
 echo '</div>';// close #indi_header
@@ -222,14 +233,14 @@ foreach ($controller->tabs as $tab) {
 	if ($tab->hasTabContent()) {
 		// jQueryUI/tabs.  The title attribute is used to uniquely identify each
 		// tab.  We need this identifier, so that we can remember/restore the last
-		// tab used.  Hence we must use the tab's name (not a numeric index, which
+		// tab used.  Hence we must use the tab’s name (not a numeric index, which
 		// will change from page to page).  But the title must also be a valid CSS
-		// id, which means that we cannot use the tab's title/description.  (The
+		// id, which means that we cannot use the tab’s title/description.  (The
 		// documentation suggests simply replacing spaces with underscores, but
-		// this will only work for English.)  We can wrap the tab's title in its
-		// own <div title="">, but jQueryUI gives the <a> element padding, which
+		// this will only work for English.)  We can wrap the tab’s title in its
+		// own <span title="">, but jQueryUI gives the <a> element padding, which
 		// shows the correct title on the text but the wrong title on the padding.
-		// So,... move the padding from the <a> to the internal <div>
+		// So,... move the padding from the <a> to the internal <span>.
 		echo '<li class="'.$greyed_out.'"><a title="', $tab->getName(), '" href="';
 		if ($tab->canLoadAjax()) {
 			// AJAX tabs load only when selected
@@ -238,7 +249,7 @@ foreach ($controller->tabs as $tab) {
 			// Non-AJAX tabs load immediately
 			echo '#', $tab->getName();
 		}
-		echo '"><div title="', $tab->getDescription(), '"><span>', $tab->getTitle(), '</span></div></a></li>';
+		echo '"><span title="', $tab->getDescription(), '">', $tab->getTitle(), '</span></a></li>';
 	}
 }
 echo '</ul>';

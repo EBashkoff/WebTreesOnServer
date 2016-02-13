@@ -4,10 +4,10 @@
 // This is the page that does the work of linking items.
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
-// Copyright (C) 2002 to 2009  PGV Development Team.  All rights reserved.
+// Copyright (C) 2002 to 2009 PGV Development Team.  All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,9 +21,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: inverselink.php 14786 2013-02-06 22:28:50Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'inverselink.php');
 require './includes/session.php';
@@ -37,10 +35,10 @@ $controller
 	->pageHeader();
 
 //-- page parameters and checking
-$linktoid = safe_GET_xref('linktoid');
-$mediaid  = safe_GET_xref('mediaid');
-$linkto   = safe_GET     ('linkto', array('person', 'source', 'family', 'manage', 'repository', 'note'));
-$action   = safe_GET     ('action', WT_REGEX_ALPHA, 'choose');
+$linktoid = WT_Filter::get('linktoid', WT_REGEX_XREF);
+$mediaid  = WT_Filter::get('mediaid', WT_REGEX_XREF);
+$linkto   = WT_Filter::get('linkto', 'person|source|family|manage|repository|note');
+$action   = WT_Filter::get('action', 'choose|update', 'choose');
 
 // If GedFAct_assistant/_MEDIA/ installed ======================
 if ($linkto=='manage' && array_key_exists('GEDFact_assistant', WT_Module::getActiveModules())) {
@@ -49,28 +47,9 @@ if ($linkto=='manage' && array_key_exists('GEDFact_assistant', WT_Module::getAct
 
 	//-- check for admin
 	$paramok =  true;
-	if (!empty($linktoid)) $paramok = WT_GedcomRecord::getInstance($linktoid)->canDisplayDetails();
+	if (!empty($linktoid)) $paramok = WT_GedcomRecord::getInstance($linktoid)->canShow();
 
 	if ($action == "choose" && $paramok) {
-		?>
-		<script>
-		var pastefield;
-
-		function openerpasteid(id) {
-			window.opener.paste_id(id);
-			window.close();
-		}
-
-		function paste_id(value) {
-			pastefield.value = value;
-		}
-
-		function paste_char(value) {
-			pastefield.value += value;
-		}
-		</script>
-
-		<?php
 		echo '<form name="link" method="get" action="inverselink.php">';
 		echo '<input type="hidden" name="action" value="update">';
 		if (!empty($mediaid)) {
@@ -83,7 +62,7 @@ if ($linkto=='manage' && array_key_exists('GEDFact_assistant', WT_Module::getAct
 		echo '<input type="hidden" name="ged" value="', $GEDCOM, '">';
 		echo '<table class="facts_table">';
 		echo '<tr><td class="topbottombar" colspan="2">';
-		echo WT_I18N::translate('Link to an existing media object'), help_link('add_media_linkid');
+		echo WT_I18N::translate('Link to an existing media object');
 		echo '</td></tr><tr><td class="descriptionbox width20 wrap">', WT_I18N::translate('Media'), '</td>';
 		echo '<td class="optionbox wrap">';
 		if (!empty($mediaid)) {
@@ -93,7 +72,7 @@ if ($linkto=='manage' && array_key_exists('GEDFact_assistant', WT_Module::getAct
 				->execute(array($mediaid, WT_GED_ID))
 				->fetchOne();
 			if ($title) {
-				echo '<b>', htmlspecialchars($title), '</b>';
+				echo '<b>', WT_Filter::escapeHtml($title), '</b>';
 			} else {
 				echo '<b>', $mediaid, '</b>';
 			}
@@ -113,7 +92,7 @@ if ($linkto=='manage' && array_key_exists('GEDFact_assistant', WT_Module::getAct
 				echo '<input class="pedigree_form" type="text" name="linktoid" id="linktopid" size="3" value="', $linktoid, '"> ';
 				echo print_findindi_link('linktopid');
 			} else {
-				$record=WT_Person::getInstance($linktoid);
+				$record=WT_Individual::getInstance($linktoid);
 				echo $record->format_list('span', false, $record->getFullName());
 			}
 		}
@@ -168,7 +147,10 @@ if ($linkto=='manage' && array_key_exists('GEDFact_assistant', WT_Module::getAct
 		echo '</table>';
 		echo '</form>';
 	} elseif ($action == "update" && $paramok) {
-		linkMedia($mediaid, $linktoid);
+		$record = WT_GedcomRecord::getInstance($linktoid);
+		$record->createFact('1 OBJE @' . $mediaid . '@', true);
+		$controller->addInlineJavascript('closePopupAndReloadParent();');
+
 	}
 	echo '<button onclick="closePopupAndReloadParent();">', WT_I18N::translate('close'), '</button>';
 }

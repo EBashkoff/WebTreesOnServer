@@ -2,28 +2,6 @@
 define('WT_SCRIPT_NAME', 'myportal.php');
 require 'mysession.php';
 
-// Get connection to webtrees database
-if (file_exists(FILE_PATH_PREFIX . 'data/config.ini.php')) {
-    $dbconfig = parse_ini_file(FILE_PATH_PREFIX . 'data/config.ini.php');   // Database connection params
-
-    if (!is_array($dbconfig)) { // Invalid/unreadable config file?
-        header('Location: ' . FILE_PATH_PREFIX . 'site-unavailable.php');
-        exit;
-    }
-} else {                       // Database file does not exist
-    header('Location: ' . FILE_PATH_PREFIX . 'site-unavailable.php');
-    exit;
-}
-////  Make connection to database
-$con = mysql_connect(MY_DBSERVER . ':' . $dbconfig['dbport'], $dbconfig['dbuser'], $dbconfig['dbpass']);
-if (!$con) {
-    die('Could not connect: ' . mysql_error());
-}
-mysql_select_db($dbconfig['dbname'], $con);
-$qq = "UPDATE wt_session SET session_height=". 123 . ", session_type='a' WHERE session_id='" . $_COOKIE['WT_SESSION']. "';";
-mysql_query($qq, $con);
-mysql_close($con);
-
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
     <head>

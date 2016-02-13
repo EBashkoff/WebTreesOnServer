@@ -5,10 +5,10 @@
 // age -> periodes of 10 years (different for 0-1,1-5,5-10,10-20 etc)
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
-// Copyright (C) 2002 to 2010  PGV Development Team.  All rights reserved.
+// Copyright (C) 2002 to 2010 PGV Development Team.  All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,27 +22,42 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: statistics.php 14919 2013-03-26 09:39:58Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'statistics.php');
 require './includes/session.php';
 
 // check for on demand content loading
-$tab = safe_GET('tab', WT_REGEX_NOSCRIPT, 0);
-$ajax = safe_GET('ajax', WT_REGEX_NOSCRIPT, 0);
+$tab  = WT_Filter::getInteger('tab', 0, 3);
+$ajax = WT_Filter::getBool('ajax');
 
 if (!$ajax) {
 	$controller=new WT_Controller_Page();
 	$controller->setPageTitle(WT_I18N::translate('Statistics'))
 		->addExternalJavascript(WT_STATIC_URL.'js/autocomplete.js')
-		->addInlineJavascript('jQuery("#stats-tabs").tabs({ spinner: "<i class=\"icon-loading-small\"></i>", cache: true });')
-		->addInlineJavascript('jQuery("#stats-tabs").css("visibility", "visible");')
+		->addInlineJavascript('
+			jQuery("#statistics_chart").css("visibility", "visible");
+			jQuery("#statistics_chart").tabs({
+				load: function() {
+					jQuery("#loading-indicator").removeClass("loading-image");
+				},
+				beforeLoad: function(event, ui) {
+					jQuery("#loading-indicator").addClass("loading-image");
+					// Only load each tab once
+					if (ui.tab.data("loaded")) {
+						event.preventDefault();
+						return;
+					}
+					ui.jqXHR.success(function() {
+						ui.tab.data("loaded", true);
+					});
+				}
+			});
+		')
 		->pageHeader();
 
-	echo '<div id="stats-details"><h2>', WT_I18N::translate('Statistics'), '</h2>',
-		'<div id="stats-tabs">',
+	echo '<div id="statistics-page"><h2>', WT_I18N::translate('Statistics'), '</h2>',
+		'<div id="statistics_chart">',
 		'<ul>',
 			'<li><a href="statistics.php?ged=', WT_GEDURL, '&amp;ajax=1&amp;tab=0">',
 			'<span id="stats-indi">', WT_I18N::translate('Individuals'), '</span></a></li>',
@@ -53,14 +68,16 @@ if (!$ajax) {
 			'<li><a href="statistics.php?ged=', WT_GEDURL, '&amp;ajax=1&amp;tab=3">',
 			'<span id="stats-own">', WT_I18N::translate('Own charts'), '</span></a></li>',
 		'</ul>',
-		'</div>', // stats-tabs
-		'</div>', // stats-details
+		'<div id="loading-indicator" style="margin:auto;width:100%;"></div>',
+		'</div>', // statistics_chart
+		'</div>', // statistics-page
 	'<br><br>';
 } else {
 	$controller=new WT_Controller_Ajax();
 	$controller
 		->pageHeader()
-		->addExternalJavascript(WT_STATIC_URL.'js/autocomplete.js');
+		->addExternalJavascript(WT_STATIC_URL.'js/autocomplete.js')
+		->addInlineJavascript('jQuery("#loading-indicator").removeClass("loading-image");');
 	$stats = new WT_Stats($GEDCOM);
 	if ($tab==0) {
 		echo '<fieldset>
@@ -79,8 +96,8 @@ if (!$ajax) {
 				<td class="facts_value" align="center">', $stats->totalDeceased(), '</td>
 			</tr>
 			<tr>
-				<td class="facts_value statistics_chart" colspan="2">', $stats->chartSex(), '</td>
-				<td class="facts_value statistics_chart" colspan="2">', $stats->chartMortality(), '</td>
+				<td class="facts_value statistics-page" colspan="2">', $stats->chartSex(), '</td>
+				<td class="facts_value statistics-page" colspan="2">', $stats->chartMortality(), '</td>
 			</tr>
 		</table>
 		<br>
@@ -99,8 +116,8 @@ if (!$ajax) {
 				<td class="facts_label">', WT_I18N::translate('Deaths by century'), '</td>
 			</tr>
 			<tr>
-				<td class="facts_value statistics_chart">', $stats->statsBirth(), '</td>
-				<td class="facts_value statistics_chart">', $stats->statsDeath(), '</td>
+				<td class="facts_value statistics-page">', $stats->statsBirth(), '</td>
+				<td class="facts_value statistics-page">', $stats->statsDeath(), '</td>
 			</tr>
 			<tr>
 				<td class="facts_label">', WT_I18N::translate('Earliest birth'), '</td>
@@ -133,7 +150,7 @@ if (!$ajax) {
 				<td class="facts_value" align="center">', $stats->averageLifespanFemale(true), '</td>
 			</tr>
 			<tr>
-				<td class="facts_value statistics_chart" colspan="3">', $stats->statsAge(), '</td>
+				<td class="facts_value statistics-page" colspan="3">', $stats->statsAge(), '</td>
 			</tr>
 		</table>
 		<br>
@@ -150,7 +167,7 @@ if (!$ajax) {
 		</table>
 		<br>';
 		if (WT_USER_ID) {
-			echo '<b>', WT_I18N::translate('Oldest living people'), '</b>
+			echo '<b>', WT_I18N::translate('Oldest living individuals'), '</b>
 			<table class="facts_table">
 				<tr>
 					<td class="facts_label">', WT_I18N::translate('Males'), '</td>
@@ -178,8 +195,8 @@ if (!$ajax) {
 				<td class="facts_label">', WT_I18N::translate('Top given names'), '</td>
 			</tr>
 			<tr>
-				<td class="facts_value statistics_chart">', $stats->chartCommonSurnames(), '</td>
-				<td class="facts_value statistics_chart">', $stats->chartCommonGiven(), '</td>
+				<td class="facts_value statistics-page">', $stats->chartCommonSurnames(), '</td>
+				<td class="facts_value statistics-page">', $stats->chartCommonGiven(), '</td>
 			</tr>
 		</table>
 		</fieldset>';
@@ -201,8 +218,8 @@ if (!$ajax) {
 				<td class="facts_label">', WT_I18N::translate('Divorces by century'), '</td>
 			</tr>
 			<tr>
-				<td class="facts_value statistics_chart">', $stats->statsMarr(), '</td>
-				<td class="facts_value statistics_chart">', $stats->statsDiv(), '</td>
+				<td class="facts_value statistics-page">', $stats->statsMarr(), '</td>
+				<td class="facts_value statistics-page">', $stats->statsDiv(), '</td>
 			</tr>
 			<tr>
 				<td class="facts_label">', WT_I18N::translate('Earliest marriage'), '</td>
@@ -253,7 +270,7 @@ if (!$ajax) {
 				<td class="facts_value">', $stats->oldestMarriageFemale(), '</td>
 			</tr>
 			<tr>
-				<td class="facts_value statistics_chart" colspan="2">', $stats->statsMarrAge(), '</td>
+				<td class="facts_value statistics-page" colspan="2">', $stats->statsMarrAge(), '</td>
 			</tr>
 		</table>
 		<br>
@@ -288,8 +305,8 @@ if (!$ajax) {
 				<td class="facts_value" align="center">', $stats->noChildrenFamilies(), '</td>
 			</tr>
 			<tr>
-				<td class="facts_value statistics_chart">', $stats->statsChildren(), '</td>
-				<td class="facts_value statistics_chart">', $stats->chartNoChildrenFamilies(), '</td>
+				<td class="facts_value statistics-page">', $stats->statsChildren(), '</td>
+				<td class="facts_value statistics-page">', $stats->chartNoChildrenFamilies(), '</td>
 			</tr>
 			<tr>
 				<td class="facts_label">', WT_I18N::translate('Largest families'), '</td>
@@ -359,7 +376,7 @@ if (!$ajax) {
 				<td class="facts_label">', WT_I18N::translate('Media objects'), '</td>
 			</tr>
 			<tr>
-				<td class="facts_value statistics_chart">', $stats->chartMedia(), '</td>
+				<td class="facts_value statistics-page">', $stats->chartMedia(), '</td>
 			</tr>
 			</table>
 		</fieldset>
@@ -375,8 +392,8 @@ if (!$ajax) {
 				<td class="facts_value" align="center">', $stats->totalFamsWithSources(), '</td>
 			</tr>
 			<tr>
-				<td class="facts_value statistics_chart">', $stats->chartIndisWithSources(), '</td>
-				<td class="facts_value statistics_chart">', $stats->chartFamsWithSources(), '</td>
+				<td class="facts_value statistics-page">', $stats->chartIndisWithSources(), '</td>
+				<td class="facts_value statistics-page">', $stats->chartFamsWithSources(), '</td>
 			</tr>
 			</table>
 		</fieldset>
@@ -413,24 +430,36 @@ if (!$ajax) {
 				var box = document.getElementById(sel);
 				box.style.display = 'none';
 				var box_m = document.getElementById(sel+'_m');
-				if (box_m) box_m.style.display = 'none';
+				if (box_m) {
+					box_m.style.display = 'none';
+				}
 				if (sel=='map_opt') {
 					var box_axes = document.getElementById('axes');
-					if (box_axes) box_axes.style.display = '';
+					if (box_axes) {
+						box_axes.style.display = '';
+					}
 					var box_zyaxes = document.getElementById('zyaxes');
-					if (box_zyaxes) box_zyaxes.style.display = '';
+					if (box_zyaxes) {
+						box_zyaxes.style.display = '';
+					}
 				}
 			}
 			function statusShow(sel) {
 				var box = document.getElementById(sel);
 				box.style.display = '';
 				var box_m = document.getElementById(sel+'_m');
-				if (box_m) box_m.style.display = 'none';
+				if (box_m) {
+					box_m.style.display = 'none';
+				}
 				if (sel=='map_opt') {
 					var box_axes = document.getElementById('axes');
-					if (box_axes) box_axes.style.display = 'none';
+					if (box_axes) {
+						box_axes.style.display = 'none';
+					}
 					var box_zyaxes = document.getElementById('zyaxes');
-					if (box_zyaxes) box_zyaxes.style.display = 'none';
+					if (box_zyaxes) {
+						box_zyaxes.style.display = 'none';
+					}
 				}
 			}
 			function statusShowSurname(x) {
@@ -449,11 +478,13 @@ if (!$ajax) {
 					jQuery(response).dialog({
 						modal: true,
 						width: 964,
-						closeText: ""
-					});
-					// Close the window when we click outside it.
-					jQuery(".ui-widget-overlay").on("click", function () {
-						jQuery("div:ui-dialog:visible").dialog("close");
+						open: function() {
+							var self = this;
+							// Close the window when we click outside it.
+							jQuery(".ui-widget-overlay").on("click", function () {
+								$(self).dialog('close');
+							});
+						}
 					});
 				});
 				return false;
@@ -556,7 +587,7 @@ if (!$ajax) {
 			echo '<br><select id="xas-grenzen-leeftijden" name="xas-grenzen-leeftijden">
 				<option value="1,5,10,20,30,40,50,60,70,80,90,100" selected="selected">',
 				WT_I18N::plural('interval %s year', 'interval %s years', 10, WT_I18N::number(10)), '</option>
-				<option value="5,20,40,60,75,80,85,90">', 
+				<option value="5,20,40,60,75,80,85,90">',
 				WT_I18N::plural('interval %s year', 'interval %s years', 20, WT_I18N::number(20)), '</option>
 				<option value="10,25,50,75,100">',
 				WT_I18N::plural('interval %s year', 'interval %s years', 25, WT_I18N::number(25)), '</option>

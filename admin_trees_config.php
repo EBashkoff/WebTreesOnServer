@@ -2,10 +2,10 @@
 // UI for online updating of the GEDCOM config file.
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
-// Copyright (C) 2002 to 2010  PGV Development Team.  All rights reserved.
+// Copyright (C) 2002 to 2010 PGV Development Team.  All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,9 +19,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: admin_trees_config.php 14786 2013-02-06 22:28:50Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'admin_trees_config.php');
 
@@ -41,139 +39,143 @@ $PRIVACY_CONSTANTS = array(
 	'hidden'       => WT_I18N::translate('Hide from everyone')
 );
 
-switch (safe_POST('action')) {
+switch (WT_Filter::post('action')) {
 case 'delete':
+	if (!WT_Filter::checkCsrf()) {
+		break;
+	}
 	WT_DB::prepare(
 		"DELETE FROM `##default_resn` WHERE default_resn_id=?"
-	)->execute(array(safe_POST('default_resn_id')));
+	)->execute(array(WT_Filter::post('default_resn_id')));
 	// Reload the page, so that the new privacy restrictions are reflected in the header
 	header('Location: '.WT_SERVER_NAME.WT_SCRIPT_PATH.WT_SCRIPT_NAME.'#privacy');
 	exit;
 case 'add':
-	if ((safe_POST('xref') || safe_POST('tag_type')) && safe_POST('resn')) {
-		if (safe_POST('xref')=='') {
+	if (!WT_Filter::checkCsrf()) {
+		break;
+	}
+	if ((WT_Filter::post('xref') || WT_Filter::post('tag_type')) && WT_Filter::post('resn')) {
+		if (WT_Filter::post('xref')=='') {
 			WT_DB::prepare(
 				"DELETE FROM `##default_resn` WHERE gedcom_id=? AND tag_type=? AND xref IS NULL"
-			)->execute(array(WT_GED_ID, safe_POST('tag_type')));
+			)->execute(array(WT_GED_ID, WT_Filter::post('tag_type')));
 		}
-		if (safe_POST('tag_type')=='') {
+		if (WT_Filter::post('tag_type')=='') {
 			WT_DB::prepare(
 				"DELETE FROM `##default_resn` WHERE gedcom_id=? AND xref=? AND tag_type IS NULL"
-			)->execute(array(WT_GED_ID, safe_POST('xref')));
+			)->execute(array(WT_GED_ID, WT_Filter::post('xref')));
 		}
 		WT_DB::prepare(
 			"REPLACE INTO `##default_resn` (gedcom_id, xref, tag_type, resn) VALUES (?, NULLIF(?, ''), NULLIF(?, ''), ?)"
-		)->execute(array(WT_GED_ID, safe_POST_xref('xref'), safe_POST('tag_type'), safe_POST('resn')));
+		)->execute(array(WT_GED_ID, WT_Filter::post('xref', WT_REGEX_XREF), WT_Filter::post('tag_type'), WT_Filter::post('resn')));
 	}
 	// Reload the page, so that the new privacy restrictions are reflected in the header
 	header('Location: '.WT_SERVER_NAME.WT_SCRIPT_PATH.WT_SCRIPT_NAME.'#privacy');
 	exit;
 case 'update':
-	set_gedcom_setting(WT_GED_ID, 'ABBREVIATE_CHART_LABELS',      safe_POST_bool('NEW_ABBREVIATE_CHART_LABELS'));
-	set_gedcom_setting(WT_GED_ID, 'ADVANCED_NAME_FACTS',          safe_POST('NEW_ADVANCED_NAME_FACTS'));
-	set_gedcom_setting(WT_GED_ID, 'ADVANCED_PLAC_FACTS',          safe_POST('NEW_ADVANCED_PLAC_FACTS'));
-	set_gedcom_setting(WT_GED_ID, 'ALLOW_EDIT_GEDCOM',            safe_POST_bool('NEW_ALLOW_EDIT_GEDCOM'));
-	set_gedcom_setting(WT_GED_ID, 'ALLOW_THEME_DROPDOWN',         safe_POST_bool('NEW_ALLOW_THEME_DROPDOWN'));
+	if (!WT_Filter::checkCsrf()) {
+		break;
+	}
+	set_gedcom_setting(WT_GED_ID, 'ADVANCED_NAME_FACTS',          WT_Filter::post('NEW_ADVANCED_NAME_FACTS'));
+	set_gedcom_setting(WT_GED_ID, 'ADVANCED_PLAC_FACTS',          WT_Filter::post('NEW_ADVANCED_PLAC_FACTS'));
+	set_gedcom_setting(WT_GED_ID, 'ALLOW_THEME_DROPDOWN',         WT_Filter::postBool('NEW_ALLOW_THEME_DROPDOWN'));
 	// For backwards compatibility with webtrees 1.x we store the two calendar formats in one variable
 	// e.g. "gregorian_and_jewish"
 	set_gedcom_setting(WT_GED_ID, 'CALENDAR_FORMAT',              implode('_and_', array_unique(array(
-		safe_POST('NEW_CALENDAR_FORMAT0', 'gregorian|julian|french|jewish|hijri|jalali', 'none'),
-		safe_POST('NEW_CALENDAR_FORMAT1', 'gregorian|julian|french|jewish|hijri|jalali', 'none')
+		WT_Filter::post('NEW_CALENDAR_FORMAT0', 'gregorian|julian|french|jewish|hijri|jalali', 'none'),
+		WT_Filter::post('NEW_CALENDAR_FORMAT1', 'gregorian|julian|french|jewish|hijri|jalali', 'none')
 	))));
-	set_gedcom_setting(WT_GED_ID, 'CHART_BOX_TAGS',               safe_POST('NEW_CHART_BOX_TAGS'));
-	set_gedcom_setting(WT_GED_ID, 'COMMON_NAMES_ADD',             str_replace(' ', '', safe_POST('NEW_COMMON_NAMES_ADD')));
-	set_gedcom_setting(WT_GED_ID, 'COMMON_NAMES_REMOVE',          str_replace(' ', '', safe_POST('NEW_COMMON_NAMES_REMOVE')));
-	set_gedcom_setting(WT_GED_ID, 'COMMON_NAMES_THRESHOLD',       safe_POST('NEW_COMMON_NAMES_THRESHOLD', WT_REGEX_INTEGER, 40));
-	set_gedcom_setting(WT_GED_ID, 'CONTACT_USER_ID',              safe_POST('NEW_CONTACT_USER_ID'));
-	set_gedcom_setting(WT_GED_ID, 'DEFAULT_PEDIGREE_GENERATIONS', safe_POST('NEW_DEFAULT_PEDIGREE_GENERATIONS'));
-	set_gedcom_setting(WT_GED_ID, 'EXPAND_NOTES',                 safe_POST_bool('NEW_EXPAND_NOTES'));
-	set_gedcom_setting(WT_GED_ID, 'EXPAND_RELATIVES_EVENTS',      safe_POST_bool('NEW_EXPAND_RELATIVES_EVENTS'));
-	set_gedcom_setting(WT_GED_ID, 'EXPAND_SOURCES',               safe_POST_bool('NEW_EXPAND_SOURCES'));
-	set_gedcom_setting(WT_GED_ID, 'FAM_FACTS_ADD',                str_replace(' ', '', safe_POST('NEW_FAM_FACTS_ADD')));
-	set_gedcom_setting(WT_GED_ID, 'FAM_FACTS_QUICK',              str_replace(' ', '', safe_POST('NEW_FAM_FACTS_QUICK')));
-	set_gedcom_setting(WT_GED_ID, 'FAM_FACTS_UNIQUE',             str_replace(' ', '', safe_POST('NEW_FAM_FACTS_UNIQUE')));
-	set_gedcom_setting(WT_GED_ID, 'FAM_ID_PREFIX',                safe_POST('NEW_FAM_ID_PREFIX'));
-	set_gedcom_setting(WT_GED_ID, 'FULL_SOURCES',                 safe_POST_bool('NEW_FULL_SOURCES'));
-	set_gedcom_setting(WT_GED_ID, 'GEDCOM_ID_PREFIX',             safe_POST('NEW_GEDCOM_ID_PREFIX'));
-	set_gedcom_setting(WT_GED_ID, 'GEDCOM_MEDIA_PATH',            safe_POST('NEW_GEDCOM_MEDIA_PATH'));
-	set_gedcom_setting(WT_GED_ID, 'GENERATE_UIDS',                safe_POST_bool('NEW_GENERATE_UIDS'));
-	set_gedcom_setting(WT_GED_ID, 'HIDE_GEDCOM_ERRORS',          !safe_POST_bool('NEW_HIDE_GEDCOM_ERRORS'));
-	set_gedcom_setting(WT_GED_ID, 'HIDE_LIVE_PEOPLE',             safe_POST_bool('NEW_HIDE_LIVE_PEOPLE'));
-	set_gedcom_setting(WT_GED_ID, 'GEDCOM_MEDIA_PATH',            safe_POST('GEDCOM_MEDIA_PATH'));
-	set_gedcom_setting(WT_GED_ID, 'INDI_FACTS_ADD',               str_replace(' ', '', safe_POST('NEW_INDI_FACTS_ADD')));
-	set_gedcom_setting(WT_GED_ID, 'INDI_FACTS_QUICK',             str_replace(' ', '', safe_POST('NEW_INDI_FACTS_QUICK')));
-	set_gedcom_setting(WT_GED_ID, 'INDI_FACTS_UNIQUE',            str_replace(' ', '', safe_POST('NEW_INDI_FACTS_UNIQUE')));
-	set_gedcom_setting(WT_GED_ID, 'KEEP_ALIVE_YEARS_BIRTH',       safe_POST('KEEP_ALIVE_YEARS_BIRTH', WT_REGEX_INTEGER, 0));
-	set_gedcom_setting(WT_GED_ID, 'KEEP_ALIVE_YEARS_DEATH',       safe_POST('KEEP_ALIVE_YEARS_DEATH', WT_REGEX_INTEGER, 0));
-	set_gedcom_setting(WT_GED_ID, 'LANGUAGE',                     safe_POST('GEDCOMLANG'));
-	set_gedcom_setting(WT_GED_ID, 'MAX_ALIVE_AGE',                safe_POST('MAX_ALIVE_AGE', WT_REGEX_INTEGER, 100));
-	set_gedcom_setting(WT_GED_ID, 'MAX_DESCENDANCY_GENERATIONS',  safe_POST('NEW_MAX_DESCENDANCY_GENERATIONS'));
-	set_gedcom_setting(WT_GED_ID, 'MAX_PEDIGREE_GENERATIONS',     safe_POST('NEW_MAX_PEDIGREE_GENERATIONS'));
-	set_gedcom_setting(WT_GED_ID, 'MEDIA_ID_PREFIX',              safe_POST('NEW_MEDIA_ID_PREFIX'));
-	set_gedcom_setting(WT_GED_ID, 'MEDIA_UPLOAD',                 safe_POST('NEW_MEDIA_UPLOAD'));
-	set_gedcom_setting(WT_GED_ID, 'META_DESCRIPTION',             safe_POST('NEW_META_DESCRIPTION'));
-	set_gedcom_setting(WT_GED_ID, 'META_TITLE',                   safe_POST('NEW_META_TITLE'));
-	set_gedcom_setting(WT_GED_ID, 'NOTE_ID_PREFIX',               safe_POST('NEW_NOTE_ID_PREFIX'));
-	set_gedcom_setting(WT_GED_ID, 'NO_UPDATE_CHAN',               safe_POST_bool('NEW_NO_UPDATE_CHAN'));
-	set_gedcom_setting(WT_GED_ID, 'PEDIGREE_FULL_DETAILS',        safe_POST_bool('NEW_PEDIGREE_FULL_DETAILS'));
-	set_gedcom_setting(WT_GED_ID, 'PEDIGREE_LAYOUT',              safe_POST_bool('NEW_PEDIGREE_LAYOUT'));
-	set_gedcom_setting(WT_GED_ID, 'PEDIGREE_ROOT_ID',             safe_POST_xref('NEW_PEDIGREE_ROOT_ID'));
-	set_gedcom_setting(WT_GED_ID, 'PEDIGREE_SHOW_GENDER',         safe_POST_bool('NEW_PEDIGREE_SHOW_GENDER'));
-	set_gedcom_setting(WT_GED_ID, 'PREFER_LEVEL2_SOURCES',        safe_POST('NEW_PREFER_LEVEL2_SOURCES'));
-	set_gedcom_setting(WT_GED_ID, 'QUICK_REQUIRED_FACTS',         safe_POST('NEW_QUICK_REQUIRED_FACTS'));
-	set_gedcom_setting(WT_GED_ID, 'QUICK_REQUIRED_FAMFACTS',      safe_POST('NEW_QUICK_REQUIRED_FAMFACTS'));
-	set_gedcom_setting(WT_GED_ID, 'REPO_FACTS_ADD',               str_replace(' ', '', safe_POST('NEW_REPO_FACTS_ADD')));
-	set_gedcom_setting(WT_GED_ID, 'REPO_FACTS_QUICK',             str_replace(' ', '', safe_POST('NEW_REPO_FACTS_QUICK')));
-	set_gedcom_setting(WT_GED_ID, 'REPO_FACTS_UNIQUE',            str_replace(' ', '', safe_POST('NEW_REPO_FACTS_UNIQUE')));
-	set_gedcom_setting(WT_GED_ID, 'REPO_ID_PREFIX',               safe_POST('NEW_REPO_ID_PREFIX'));
-	set_gedcom_setting(WT_GED_ID, 'REQUIRE_AUTHENTICATION',       safe_POST_bool('NEW_REQUIRE_AUTHENTICATION'));
-	set_gedcom_setting(WT_GED_ID, 'SAVE_WATERMARK_IMAGE',         safe_POST_bool('NEW_SAVE_WATERMARK_IMAGE'));
-	set_gedcom_setting(WT_GED_ID, 'SAVE_WATERMARK_THUMB',         safe_POST_bool('NEW_SAVE_WATERMARK_THUMB'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_AGE_DIFF',                safe_POST_bool('NEW_SHOW_AGE_DIFF'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_COUNTER',                 safe_POST_bool('NEW_SHOW_COUNTER'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_DEAD_PEOPLE',             safe_POST('SHOW_DEAD_PEOPLE'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_EST_LIST_DATES',          safe_POST_bool('NEW_SHOW_EST_LIST_DATES'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_FACT_ICONS',              safe_POST_bool('NEW_SHOW_FACT_ICONS'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_GEDCOM_RECORD',           safe_POST_bool('NEW_SHOW_GEDCOM_RECORD'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_HIGHLIGHT_IMAGES',        safe_POST_bool('NEW_SHOW_HIGHLIGHT_IMAGES'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_LAST_CHANGE',             safe_POST_bool('NEW_SHOW_LAST_CHANGE'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_LDS_AT_GLANCE',           safe_POST_bool('NEW_SHOW_LDS_AT_GLANCE'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_LEVEL2_NOTES',            safe_POST_bool('NEW_SHOW_LEVEL2_NOTES'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_LIVING_NAMES',            safe_POST('SHOW_LIVING_NAMES'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_MEDIA_DOWNLOAD',          safe_POST_bool('NEW_SHOW_MEDIA_DOWNLOAD'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_NO_WATERMARK',            safe_POST('NEW_SHOW_NO_WATERMARK'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_PARENTS_AGE',             safe_POST_bool('NEW_SHOW_PARENTS_AGE'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_PEDIGREE_PLACES',         safe_POST('NEW_SHOW_PEDIGREE_PLACES'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_PEDIGREE_PLACES_SUFFIX',  safe_POST_bool('NEW_SHOW_PEDIGREE_PLACES_SUFFIX'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_PRIVATE_RELATIONSHIPS',   safe_POST('SHOW_PRIVATE_RELATIONSHIPS'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_REGISTER_CAUTION',        safe_POST_bool('NEW_SHOW_REGISTER_CAUTION'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_RELATIVES_EVENTS',        safe_POST('NEW_SHOW_RELATIVES_EVENTS'));
-	set_gedcom_setting(WT_GED_ID, 'SHOW_STATS',                   safe_POST_bool('NEW_SHOW_STATS'));
-	set_gedcom_setting(WT_GED_ID, 'SOURCE_ID_PREFIX',             safe_POST('NEW_SOURCE_ID_PREFIX'));
-	set_gedcom_setting(WT_GED_ID, 'SOUR_FACTS_ADD',               str_replace(' ', '', safe_POST('NEW_SOUR_FACTS_ADD')));
-	set_gedcom_setting(WT_GED_ID, 'SOUR_FACTS_QUICK',             str_replace(' ', '', safe_POST('NEW_SOUR_FACTS_QUICK')));
-	set_gedcom_setting(WT_GED_ID, 'SOUR_FACTS_UNIQUE',            str_replace(' ', '', safe_POST('NEW_SOUR_FACTS_UNIQUE')));
-	set_gedcom_setting(WT_GED_ID, 'SUBLIST_TRIGGER_I',            safe_POST('NEW_SUBLIST_TRIGGER_I', WT_REGEX_INTEGER, 200));
-	set_gedcom_setting(WT_GED_ID, 'SURNAME_LIST_STYLE',           safe_POST('NEW_SURNAME_LIST_STYLE'));
-	set_gedcom_setting(WT_GED_ID, 'SURNAME_TRADITION',            safe_POST('NEW_SURNAME_TRADITION'));
-	set_gedcom_setting(WT_GED_ID, 'THEME_DIR',                    safe_POST('NEW_THEME_DIR'));
-	set_gedcom_setting(WT_GED_ID, 'THUMBNAIL_WIDTH',              safe_POST('NEW_THUMBNAIL_WIDTH'));
-	set_gedcom_setting(WT_GED_ID, 'USE_GEONAMES',                 safe_POST_bool('NEW_USE_GEONAMES'));
-	set_gedcom_setting(WT_GED_ID, 'USE_RIN',                      safe_POST_bool('NEW_USE_RIN'));
-	set_gedcom_setting(WT_GED_ID, 'USE_SILHOUETTE',               safe_POST_bool('NEW_USE_SILHOUETTE'));
-	set_gedcom_setting(WT_GED_ID, 'WATERMARK_THUMB',              safe_POST_bool('NEW_WATERMARK_THUMB'));
-	set_gedcom_setting(WT_GED_ID, 'WEBMASTER_USER_ID',            safe_POST('NEW_WEBMASTER_USER_ID'));
-	set_gedcom_setting(WT_GED_ID, 'WEBTREES_EMAIL',               safe_POST('NEW_WEBTREES_EMAIL'));
-	set_gedcom_setting(WT_GED_ID, 'WELCOME_TEXT_AUTH_MODE',       safe_POST('NEW_WELCOME_TEXT_AUTH_MODE'));
-	set_gedcom_setting(WT_GED_ID, 'WELCOME_TEXT_AUTH_MODE_'.WT_LOCALE, safe_POST('NEW_WELCOME_TEXT_AUTH_MODE_4', WT_REGEX_UNSAFE));
-	set_gedcom_setting(WT_GED_ID, 'WELCOME_TEXT_CUST_HEAD',       safe_POST_bool('NEW_WELCOME_TEXT_CUST_HEAD'));
-	set_gedcom_setting(WT_GED_ID, 'WORD_WRAPPED_NOTES',           safe_POST_bool('NEW_WORD_WRAPPED_NOTES'));
-	if (safe_POST('gedcom_title', WT_REGEX_UNSAFE)) {
-		set_gedcom_setting(WT_GED_ID, 'title',                        safe_POST('gedcom_title', WT_REGEX_UNSAFE));
+	set_gedcom_setting(WT_GED_ID, 'CHART_BOX_TAGS',               WT_Filter::post('NEW_CHART_BOX_TAGS'));
+	set_gedcom_setting(WT_GED_ID, 'COMMON_NAMES_ADD',             str_replace(' ', '', WT_Filter::post('NEW_COMMON_NAMES_ADD')));
+	set_gedcom_setting(WT_GED_ID, 'COMMON_NAMES_REMOVE',          str_replace(' ', '', WT_Filter::post('NEW_COMMON_NAMES_REMOVE')));
+	set_gedcom_setting(WT_GED_ID, 'COMMON_NAMES_THRESHOLD',       WT_Filter::post('NEW_COMMON_NAMES_THRESHOLD', WT_REGEX_INTEGER, 40));
+	set_gedcom_setting(WT_GED_ID, 'CONTACT_USER_ID',              WT_Filter::post('NEW_CONTACT_USER_ID'));
+	set_gedcom_setting(WT_GED_ID, 'DEFAULT_PEDIGREE_GENERATIONS', WT_Filter::post('NEW_DEFAULT_PEDIGREE_GENERATIONS'));
+	set_gedcom_setting(WT_GED_ID, 'EXPAND_NOTES',                 WT_Filter::postBool('NEW_EXPAND_NOTES'));
+	set_gedcom_setting(WT_GED_ID, 'EXPAND_RELATIVES_EVENTS',      WT_Filter::postBool('NEW_EXPAND_RELATIVES_EVENTS'));
+	set_gedcom_setting(WT_GED_ID, 'EXPAND_SOURCES',               WT_Filter::postBool('NEW_EXPAND_SOURCES'));
+	set_gedcom_setting(WT_GED_ID, 'FAM_FACTS_ADD',                str_replace(' ', '', WT_Filter::post('NEW_FAM_FACTS_ADD')));
+	set_gedcom_setting(WT_GED_ID, 'FAM_FACTS_QUICK',              str_replace(' ', '', WT_Filter::post('NEW_FAM_FACTS_QUICK')));
+	set_gedcom_setting(WT_GED_ID, 'FAM_FACTS_UNIQUE',             str_replace(' ', '', WT_Filter::post('NEW_FAM_FACTS_UNIQUE')));
+	set_gedcom_setting(WT_GED_ID, 'FAM_ID_PREFIX',                WT_Filter::post('NEW_FAM_ID_PREFIX'));
+	set_gedcom_setting(WT_GED_ID, 'FULL_SOURCES',                 WT_Filter::postBool('NEW_FULL_SOURCES'));
+	set_gedcom_setting(WT_GED_ID, 'FORMAT_TEXT',                  WT_Filter::post('NEW_FORMAT_TEXT'));
+	set_gedcom_setting(WT_GED_ID, 'GEDCOM_ID_PREFIX',             WT_Filter::post('NEW_GEDCOM_ID_PREFIX'));
+	set_gedcom_setting(WT_GED_ID, 'GEDCOM_MEDIA_PATH',            WT_Filter::post('NEW_GEDCOM_MEDIA_PATH'));
+	set_gedcom_setting(WT_GED_ID, 'GENERATE_UIDS',                WT_Filter::postBool('NEW_GENERATE_UIDS'));
+	set_gedcom_setting(WT_GED_ID, 'GEONAMES_ACCOUNT',             WT_Filter::post('NEW_GEONAMES_ACCOUNT'));
+	set_gedcom_setting(WT_GED_ID, 'HIDE_GEDCOM_ERRORS',           WT_Filter::postBool('NEW_HIDE_GEDCOM_ERRORS'));
+	set_gedcom_setting(WT_GED_ID, 'HIDE_LIVE_PEOPLE',             WT_Filter::postBool('NEW_HIDE_LIVE_PEOPLE'));
+	set_gedcom_setting(WT_GED_ID, 'GEDCOM_MEDIA_PATH',            WT_Filter::post('GEDCOM_MEDIA_PATH'));
+	set_gedcom_setting(WT_GED_ID, 'INDI_FACTS_ADD',               str_replace(' ', '', WT_Filter::post('NEW_INDI_FACTS_ADD')));
+	set_gedcom_setting(WT_GED_ID, 'INDI_FACTS_QUICK',             str_replace(' ', '', WT_Filter::post('NEW_INDI_FACTS_QUICK')));
+	set_gedcom_setting(WT_GED_ID, 'INDI_FACTS_UNIQUE',            str_replace(' ', '', WT_Filter::post('NEW_INDI_FACTS_UNIQUE')));
+	set_gedcom_setting(WT_GED_ID, 'KEEP_ALIVE_YEARS_BIRTH',       WT_Filter::post('KEEP_ALIVE_YEARS_BIRTH', WT_REGEX_INTEGER, 0));
+	set_gedcom_setting(WT_GED_ID, 'KEEP_ALIVE_YEARS_DEATH',       WT_Filter::post('KEEP_ALIVE_YEARS_DEATH', WT_REGEX_INTEGER, 0));
+	set_gedcom_setting(WT_GED_ID, 'LANGUAGE',                     WT_Filter::post('GEDCOMLANG'));
+	set_gedcom_setting(WT_GED_ID, 'MAX_ALIVE_AGE',                WT_Filter::post('MAX_ALIVE_AGE', WT_REGEX_INTEGER, 100));
+	set_gedcom_setting(WT_GED_ID, 'MAX_DESCENDANCY_GENERATIONS',  WT_Filter::post('NEW_MAX_DESCENDANCY_GENERATIONS'));
+	set_gedcom_setting(WT_GED_ID, 'MAX_PEDIGREE_GENERATIONS',     WT_Filter::post('NEW_MAX_PEDIGREE_GENERATIONS'));
+	set_gedcom_setting(WT_GED_ID, 'MEDIA_ID_PREFIX',              WT_Filter::post('NEW_MEDIA_ID_PREFIX'));
+	set_gedcom_setting(WT_GED_ID, 'MEDIA_UPLOAD',                 WT_Filter::post('NEW_MEDIA_UPLOAD'));
+	set_gedcom_setting(WT_GED_ID, 'META_DESCRIPTION',             WT_Filter::post('NEW_META_DESCRIPTION'));
+	set_gedcom_setting(WT_GED_ID, 'META_TITLE',                   WT_Filter::post('NEW_META_TITLE'));
+	set_gedcom_setting(WT_GED_ID, 'NOTE_ID_PREFIX',               WT_Filter::post('NEW_NOTE_ID_PREFIX'));
+	set_gedcom_setting(WT_GED_ID, 'NO_UPDATE_CHAN',               WT_Filter::postBool('NEW_NO_UPDATE_CHAN'));
+	set_gedcom_setting(WT_GED_ID, 'PEDIGREE_FULL_DETAILS',        WT_Filter::postBool('NEW_PEDIGREE_FULL_DETAILS'));
+	set_gedcom_setting(WT_GED_ID, 'PEDIGREE_LAYOUT',              WT_Filter::postBool('NEW_PEDIGREE_LAYOUT'));
+	set_gedcom_setting(WT_GED_ID, 'PEDIGREE_ROOT_ID',             WT_Filter::post('NEW_PEDIGREE_ROOT_ID', WT_REGEX_XREF));
+	set_gedcom_setting(WT_GED_ID, 'PEDIGREE_SHOW_GENDER',         WT_Filter::postBool('NEW_PEDIGREE_SHOW_GENDER'));
+	set_gedcom_setting(WT_GED_ID, 'PREFER_LEVEL2_SOURCES',        WT_Filter::post('NEW_PREFER_LEVEL2_SOURCES'));
+	set_gedcom_setting(WT_GED_ID, 'QUICK_REQUIRED_FACTS',         WT_Filter::post('NEW_QUICK_REQUIRED_FACTS'));
+	set_gedcom_setting(WT_GED_ID, 'QUICK_REQUIRED_FAMFACTS',      WT_Filter::post('NEW_QUICK_REQUIRED_FAMFACTS'));
+	set_gedcom_setting(WT_GED_ID, 'REPO_FACTS_ADD',               str_replace(' ', '', WT_Filter::post('NEW_REPO_FACTS_ADD')));
+	set_gedcom_setting(WT_GED_ID, 'REPO_FACTS_QUICK',             str_replace(' ', '', WT_Filter::post('NEW_REPO_FACTS_QUICK')));
+	set_gedcom_setting(WT_GED_ID, 'REPO_FACTS_UNIQUE',            str_replace(' ', '', WT_Filter::post('NEW_REPO_FACTS_UNIQUE')));
+	set_gedcom_setting(WT_GED_ID, 'REPO_ID_PREFIX',               WT_Filter::post('NEW_REPO_ID_PREFIX'));
+	set_gedcom_setting(WT_GED_ID, 'REQUIRE_AUTHENTICATION',       WT_Filter::postBool('NEW_REQUIRE_AUTHENTICATION'));
+	set_gedcom_setting(WT_GED_ID, 'SAVE_WATERMARK_IMAGE',         WT_Filter::postBool('NEW_SAVE_WATERMARK_IMAGE'));
+	set_gedcom_setting(WT_GED_ID, 'SAVE_WATERMARK_THUMB',         WT_Filter::postBool('NEW_SAVE_WATERMARK_THUMB'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_AGE_DIFF',                WT_Filter::postBool('NEW_SHOW_AGE_DIFF'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_COUNTER',                 WT_Filter::postBool('NEW_SHOW_COUNTER'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_DEAD_PEOPLE',             WT_Filter::post('SHOW_DEAD_PEOPLE'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_EST_LIST_DATES',          WT_Filter::postBool('NEW_SHOW_EST_LIST_DATES'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_FACT_ICONS',              WT_Filter::postBool('NEW_SHOW_FACT_ICONS'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_GEDCOM_RECORD',           WT_Filter::postBool('NEW_SHOW_GEDCOM_RECORD'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_HIGHLIGHT_IMAGES',        WT_Filter::postBool('NEW_SHOW_HIGHLIGHT_IMAGES'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_LAST_CHANGE',             WT_Filter::postBool('NEW_SHOW_LAST_CHANGE'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_LDS_AT_GLANCE',           WT_Filter::postBool('NEW_SHOW_LDS_AT_GLANCE'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_LEVEL2_NOTES',            WT_Filter::postBool('NEW_SHOW_LEVEL2_NOTES'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_LIVING_NAMES',            WT_Filter::post('SHOW_LIVING_NAMES'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_MEDIA_DOWNLOAD',          WT_Filter::postBool('NEW_SHOW_MEDIA_DOWNLOAD'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_NO_WATERMARK',            WT_Filter::post('NEW_SHOW_NO_WATERMARK'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_PARENTS_AGE',             WT_Filter::postBool('NEW_SHOW_PARENTS_AGE'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_PEDIGREE_PLACES',         WT_Filter::post('NEW_SHOW_PEDIGREE_PLACES'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_PEDIGREE_PLACES_SUFFIX',  WT_Filter::postBool('NEW_SHOW_PEDIGREE_PLACES_SUFFIX'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_PRIVATE_RELATIONSHIPS',   WT_Filter::post('SHOW_PRIVATE_RELATIONSHIPS'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_RELATIVES_EVENTS',        WT_Filter::post('NEW_SHOW_RELATIVES_EVENTS'));
+	set_gedcom_setting(WT_GED_ID, 'SHOW_STATS',                   WT_Filter::postBool('NEW_SHOW_STATS'));
+	set_gedcom_setting(WT_GED_ID, 'SOURCE_ID_PREFIX',             WT_Filter::post('NEW_SOURCE_ID_PREFIX'));
+	set_gedcom_setting(WT_GED_ID, 'SOUR_FACTS_ADD',               str_replace(' ', '', WT_Filter::post('NEW_SOUR_FACTS_ADD')));
+	set_gedcom_setting(WT_GED_ID, 'SOUR_FACTS_QUICK',             str_replace(' ', '', WT_Filter::post('NEW_SOUR_FACTS_QUICK')));
+	set_gedcom_setting(WT_GED_ID, 'SOUR_FACTS_UNIQUE',            str_replace(' ', '', WT_Filter::post('NEW_SOUR_FACTS_UNIQUE')));
+	set_gedcom_setting(WT_GED_ID, 'SUBLIST_TRIGGER_I',            WT_Filter::post('NEW_SUBLIST_TRIGGER_I', WT_REGEX_INTEGER, 200));
+	set_gedcom_setting(WT_GED_ID, 'SURNAME_LIST_STYLE',           WT_Filter::post('NEW_SURNAME_LIST_STYLE'));
+	set_gedcom_setting(WT_GED_ID, 'SURNAME_TRADITION',            WT_Filter::post('NEW_SURNAME_TRADITION'));
+	set_gedcom_setting(WT_GED_ID, 'THEME_DIR',                    WT_Filter::post('NEW_THEME_DIR'));
+	set_gedcom_setting(WT_GED_ID, 'THUMBNAIL_WIDTH',              WT_Filter::post('NEW_THUMBNAIL_WIDTH'));
+	set_gedcom_setting(WT_GED_ID, 'USE_RIN',                      WT_Filter::postBool('NEW_USE_RIN'));
+	set_gedcom_setting(WT_GED_ID, 'USE_SILHOUETTE',               WT_Filter::postBool('NEW_USE_SILHOUETTE'));
+	set_gedcom_setting(WT_GED_ID, 'WATERMARK_THUMB',              WT_Filter::postBool('NEW_WATERMARK_THUMB'));
+	set_gedcom_setting(WT_GED_ID, 'WEBMASTER_USER_ID',            WT_Filter::post('NEW_WEBMASTER_USER_ID'));
+	set_gedcom_setting(WT_GED_ID, 'WEBTREES_EMAIL',               WT_Filter::post('NEW_WEBTREES_EMAIL'));
+	set_gedcom_setting(WT_GED_ID, 'WORD_WRAPPED_NOTES',           WT_Filter::postBool('NEW_WORD_WRAPPED_NOTES'));
+	if (WT_Filter::post('gedcom_title')) {
+		set_gedcom_setting(WT_GED_ID, 'title',                        WT_Filter::post('gedcom_title'));
 	}
 
 	// Only accept valid folders for NEW_MEDIA_DIRECTORY
-	$NEW_MEDIA_DIRECTORY = preg_replace('/[\/\\\\]+/', '/', safe_POST('NEW_MEDIA_DIRECTORY') . '/');
+	$NEW_MEDIA_DIRECTORY = preg_replace('/[\/\\\\]+/', '/', WT_Filter::post('NEW_MEDIA_DIRECTORY') . '/');
 	if (substr($NEW_MEDIA_DIRECTORY, 0, 1) == '/') {
 		$NEW_MEDIA_DIRECTORY = substr($NEW_MEDIA_DIRECTORY, 1);
 	}
@@ -189,15 +191,15 @@ case 'update':
 		}
 	}
 
-	// Reload the page, so that the settings take effect immediately.	
+	// Reload the page, so that the settings take effect immediately.
+	Zend_Session::writeClose();
 	header('Location: '.WT_SERVER_NAME.WT_SCRIPT_PATH.WT_SCRIPT_NAME);
 	exit;
 }
 
 $controller
 	->pageHeader()
-	->addInlineJavascript('jQuery("#tabs").tabs(); jQuery("#tabs").css("display", "inline");')
-	->addInlineJavascript('var pastefield; function paste_id(value) { pastefield.value=value; }');
+	->addInlineJavascript('jQuery("#tabs").tabs(); jQuery("#tabs").css("display", "inline");');
 
 if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for multiple GEDCOMs. Can be reinstated when fixed (https://bugs.launchpad.net/webtrees/+bug/613235)
 	$controller->addExternalJavascript(WT_STATIC_URL.'js/autocomplete.js');
@@ -205,17 +207,17 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 
 ?>
 <form enctype="multipart/form-data" method="post" id="configform" name="configform" action="<?php echo WT_SCRIPT_NAME; ?>">
+	<?php echo WT_Filter::getCsrf(); ?>
 	<input type="hidden" name="action" value="update">
-	<input type="hidden" name="ged" value="<?php echo htmlspecialchars(WT_GEDCOM); ?>">
+	<input type="hidden" name="ged" value="<?php echo WT_Filter::escapeHtml(WT_GEDCOM); ?>">
 
 	<div id="tabs">
 		<ul>
 			<li><a href="#file-options"><span><?php echo WT_I18N::translate('General'); ?></span></a></li>
-			<li><a href="#access-options"><span><?php echo WT_I18N::translate('Access'); ?></span></a></li>
 			<li><a href="#privacy"><span><?php echo WT_I18N::translate('Privacy'); ?></span></a></li>
 			<li><a href="#config-media"><span><?php echo WT_I18N::translate('Media'); ?></span></a></li>
 			<li><a href="#layout-options"><span><?php echo WT_I18N::translate('Layout'); ?></span></a></li>
-			<li><a href="#hide-show"><span><?php echo WT_I18N::translate('Hide &amp; Show'); ?></span></a></li>
+			<li><a href="#hide-show"><span><?php echo WT_I18N::translate('Hide &amp; show'); ?></span></a></li>
 			<li><a href="#edit-options"><span><?php echo WT_I18N::translate('Edit options'); ?></span></a></li>
 		</ul>
 		<!-- GENERAL -->
@@ -226,7 +228,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('Family tree title'); ?>
 					</td>
 					<td>
-						<input type="text" name="gedcom_title" dir="ltr" value="<?php echo htmlspecialchars(get_gedcom_setting(WT_GED_ID, 'title')); ?>" size="40" maxlength="255">
+						<input type="text" name="gedcom_title" dir="ltr" value="<?php echo WT_Filter::escapeHtml(get_gedcom_setting(WT_GED_ID, 'title')); ?>" size="40" maxlength="255">
 					</td>
 				</tr>
 				<tr>
@@ -241,7 +243,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<input type="text" name="NEW_PEDIGREE_ROOT_ID" id="NEW_PEDIGREE_ROOT_ID" value="<?php echo get_gedcom_setting(WT_GED_ID, 'PEDIGREE_ROOT_ID'); ?>" size="5" maxlength="20">
 						<?php
 							echo print_findindi_link('NEW_PEDIGREE_ROOT_ID');
-							$person=WT_Person::getInstance(get_gedcom_setting(WT_GED_ID, 'PEDIGREE_ROOT_ID'));
+							$person=WT_Individual::getInstance(get_gedcom_setting(WT_GED_ID, 'PEDIGREE_ROOT_ID'));
 							if ($person) {
 								echo ' <span class="list_item">', $person->getFullName(), ' ', $person->format_first_major_fact(WT_EVENTS_BIRT, 1), '</span>';
 							} else {
@@ -259,7 +261,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php
 						$CALENDAR_FORMATS=explode('_and_', $CALENDAR_FORMAT);
 						if (count($CALENDAR_FORMATS)==1) {
-							$CALENDAR_FORMATS[]='none';	
+							$CALENDAR_FORMATS[]='none';
 						}
 						foreach (array(
 							'none'     =>WT_I18N::translate('No calendar conversion'),
@@ -278,7 +280,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						}
 						?>
 					</select>
-	
+
 					<select id="NEW_CALENDAR_FORMAT1" name="NEW_CALENDAR_FORMAT1">
 						<?php
 						foreach (array(
@@ -362,7 +364,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</table>
 			<table>
 				<tr>
-					<th colspan="2"><?php echo WT_I18N::translate('Contact Information'); ?></th>
+					<th colspan="2"><?php echo WT_I18N::translate('Contact information'); ?></th>
 				</tr>
 				<tr>
 					<?php
@@ -414,14 +416,14 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</table>
 			<table>
 				<tr>
-					<th colspan="2"><?php echo WT_I18N::translate('Web Site and META Tag Settings'); ?></th>
+					<th colspan="2"><?php echo WT_I18N::translate('Web site and META tag settings'); ?></th>
 				</tr>
 				<tr>
 					<td>
 						<?php echo WT_I18N::translate('Add to TITLE header tag'), help_link('META_TITLE'); ?>
 					</td>
 					<td>
-						<input type="text" dir="ltr" name="NEW_META_TITLE" value="<?php echo htmlspecialchars(get_gedcom_setting(WT_GED_ID, 'META_TITLE')); ?>" size="40" maxlength="255">
+						<input type="text" dir="ltr" name="NEW_META_TITLE" value="<?php echo WT_Filter::escapeHtml(get_gedcom_setting(WT_GED_ID, 'META_TITLE')); ?>" size="40" maxlength="255">
 					</td>
 				</tr>
 				<tr>
@@ -434,6 +436,39 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('Leave this field empty to use the title of the currently active database.'); ?>
 					</td>
 				</tr>
+				<tr>
+					<th colspan="2">
+						<?php echo WT_I18N::translate('User options'); ?>
+					</th>
+				</tr>
+				<tr>
+					<td>
+						<?php echo WT_I18N::translate('Theme dropdown selector for theme changes'), help_link('ALLOW_THEME_DROPDOWN'); ?>
+					</td>
+					<td>
+						<?php echo radio_buttons('NEW_ALLOW_THEME_DROPDOWN', array(false=>WT_I18N::translate('hide'), true=>WT_I18N::translate('show')), get_gedcom_setting(WT_GED_ID, 'ALLOW_THEME_DROPDOWN')); ?>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<?php echo WT_I18N::translate('Default theme'), help_link('THEME'); ?>
+					</td>
+					<td>
+						<select name="NEW_THEME_DIR">
+							<?php
+								echo '<option value="">', WT_Filter::escapeHtml(WT_I18N::translate('<default theme>')), '</option>';
+								$current_themedir=get_gedcom_setting(WT_GED_ID, 'THEME_DIR');
+								foreach (get_theme_names() as $themename=>$themedir) {
+									echo '<option value="', $themedir, '"';
+									if ($themedir==$current_themedir) {
+										echo ' selected="selected"';
+									}
+									echo '>', $themename, '</option>';
+								}
+							?>
+						</select>
+					</td>
+				</tr>
 			</table>
 		</div>
 		<!-- PRIVACY OPTIONS -->
@@ -441,15 +476,23 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			<table>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Privacy options'), help_link('HIDE_LIVE_PEOPLE'); ?>
+						<?php echo WT_I18N::translate('Require visitor authentication'), help_link('REQUIRE_AUTHENTICATION'); ?>
 					</td>
 					<td>
-						<?php  echo radio_buttons('NEW_HIDE_LIVE_PEOPLE', array(false=>WT_I18N::translate('disable'),true=>WT_I18N::translate('enable')), $HIDE_LIVE_PEOPLE, ''); ?>
+						<?php echo edit_field_yes_no('NEW_REQUIRE_AUTHENTICATION', get_gedcom_setting(WT_GED_ID, 'REQUIRE_AUTHENTICATION')); ?>
 					</td>
 				</tr>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Show dead people'), help_link('SHOW_DEAD_PEOPLE'); ?>
+						<?php echo WT_I18N::translate('Privacy options'), help_link('HIDE_LIVE_PEOPLE'); ?>
+					</td>
+					<td>
+						<?php  echo radio_buttons('NEW_HIDE_LIVE_PEOPLE', array(false=>WT_I18N::translate('disable'), true=>WT_I18N::translate('enable')), $HIDE_LIVE_PEOPLE, ''); ?>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<?php echo WT_I18N::translate('Show dead individuals'), help_link('SHOW_DEAD_PEOPLE'); ?>
 					</td>
 					<td>
 						<?php echo edit_field_access_level("SHOW_DEAD_PEOPLE", get_gedcom_setting(WT_GED_ID, 'SHOW_DEAD_PEOPLE')); ?>
@@ -457,7 +500,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 				</tr>
 				<tr>
 					<td>
-						<?php /* I18N: ... [who were] born in the last XX years or died in the last YY years */ echo WT_I18N::translate('Extend privacy to dead people'), help_link('KEEP_ALIVE'); ?>
+						<?php /* I18N: ... [who were] born in the last XX years or died in the last YY years */ echo WT_I18N::translate('Extend privacy to dead individuals'), help_link('KEEP_ALIVE'); ?>
 					</td>
 					<td>
 						<?php
@@ -487,7 +530,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 				</tr>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Age at which to assume a person is dead'), help_link('MAX_ALIVE_AGE'); ?>
+						<?php echo WT_I18N::translate('Age at which to assume an individual is dead'), help_link('MAX_ALIVE_AGE'); ?>
 					</td>
 					<td>
 						<input type="text" name="MAX_ALIVE_AGE" value="<?php echo get_gedcom_setting(WT_GED_ID, 'MAX_ALIVE_AGE'); ?>" size="5" maxlength="3">
@@ -502,7 +545,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 					</th>
 				</tr>
 		<?php
-	
+
 		$all_tags=array();
 		$tags=array_unique(array_merge(
 			explode(',', get_gedcom_setting(WT_GED_ID, 'INDI_FACTS_ADD')), explode(',', get_gedcom_setting(WT_GED_ID, 'INDI_FACTS_UNIQUE')),
@@ -512,15 +555,15 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			explode(',', get_gedcom_setting(WT_GED_ID, 'REPO_FACTS_ADD')), explode(',', get_gedcom_setting(WT_GED_ID, 'REPO_FACTS_UNIQUE')),
 			array('SOUR', 'REPO', 'OBJE', '_PRIM', 'NOTE', 'SUBM', 'SUBN', '_UID', 'CHAN')
 		));
-	
+
 		foreach ($tags as $tag) {
 			if ($tag) {
 				$all_tags[$tag]=WT_Gedcom_Tag::getLabel($tag);
 			}
 		}
-	
+
 		uasort($all_tags, 'utf8_strcasecmp');
-	
+
 		echo '<tr><td>';
 		echo '<input type="text" class="pedigree_form" name="xref" id="xref" size="6" maxlength="20">';
 		echo ' ', print_findindi_link('xref');
@@ -635,7 +678,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 				</tr>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Show highlight images in people boxes'); ?>
+						<?php echo WT_I18N::translate('Show highlight images in individual boxes'); ?>
 					</td>
 					<td>
 						<?php echo edit_field_yes_no('NEW_SHOW_HIGHLIGHT_IMAGES', get_gedcom_setting(WT_GED_ID, 'SHOW_HIGHLIGHT_IMAGES')); ?>
@@ -643,12 +686,12 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 				</tr>
 				<tr>
 					<th colspan="2">
-						<?php echo /* I18N: Copyright messages, added to images */ WT_I18N::translate('Watermarks'); ?>
+						<?php echo /* I18N: Copyright messages, added to images */ WT_I18N::translate('Watermarks'), help_link('Watermarks'); ?>
 					</th>
 				</tr>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Add watermarks to thumbnails?'), help_link('WATERMARK_THUMB'); ?>
+						<?php echo WT_I18N::translate('Add watermarks to thumbnails?'); ?>
 					</td>
 					<td>
 						<?php echo edit_field_yes_no('NEW_WATERMARK_THUMB', get_gedcom_setting(WT_GED_ID, 'WATERMARK_THUMB')); ?>
@@ -656,7 +699,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 				</tr>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Store watermarked full size images on server?'), help_link('SAVE_WATERMARK_IMAGE'); ?>
+						<?php echo WT_I18N::translate('Store watermarked full size images on server?'); ?>
 					</td>
 					<td>
 						<?php echo edit_field_yes_no('NEW_SAVE_WATERMARK_IMAGE', get_gedcom_setting(WT_GED_ID, 'SAVE_WATERMARK_IMAGE')); ?>
@@ -664,7 +707,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 				</tr>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Store watermarked thumbnails on server?'), help_link('SAVE_WATERMARK_THUMB'); ?>
+						<?php echo WT_I18N::translate('Store watermarked thumbnails on server?'); ?>
 					</td>
 					<td>
 						<?php echo edit_field_yes_no('NEW_SAVE_WATERMARK_THUMB', get_gedcom_setting(WT_GED_ID, 'SAVE_WATERMARK_THUMB')); ?>
@@ -672,98 +715,10 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 				</tr>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Who can view non-watermarked images?'), help_link('SHOW_NO_WATERMARK'); ?>
+						<?php echo WT_I18N::translate('Images without watermarks'); ?>
 					</td>
 					<td>
 						<?php echo edit_field_access_level("NEW_SHOW_NO_WATERMARK", $SHOW_NO_WATERMARK); ?>
-					</td>
-				</tr>
-			</table>
-		</div>
-		<!-- ACCESS -->
-		<div id="access-options">
-			<table>
-				<tr>
-					<th colspan="2">
-						<?php echo WT_I18N::translate('Visitor options'); ?>
-					</th>
-				</tr>
-				<tr>
-					<td>
-						<?php echo WT_I18N::translate('Require visitor authentication'), help_link('REQUIRE_AUTHENTICATION'); ?>
-					</td>
-					<td>
-						<?php echo edit_field_yes_no('NEW_REQUIRE_AUTHENTICATION', get_gedcom_setting(WT_GED_ID, 'REQUIRE_AUTHENTICATION')); ?>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<?php echo WT_I18N::translate('Welcome text on login page'), help_link('WELCOME_TEXT_AUTH_MODE'); ?>
-					</td>
-					<td><select name="NEW_WELCOME_TEXT_AUTH_MODE">
-							<option value="0" <?php if ($WELCOME_TEXT_AUTH_MODE=='0') echo "selected=\"selected\""; ?>><?php echo WT_I18N::translate('No predefined text'); ?></option>
-							<option value="1" <?php if ($WELCOME_TEXT_AUTH_MODE=='1') echo "selected=\"selected\""; ?>><?php echo WT_I18N::translate('Predefined text that states all users can request a user account'); ?></option>
-							<option value="2" <?php if ($WELCOME_TEXT_AUTH_MODE=='2') echo "selected=\"selected\""; ?>><?php echo WT_I18N::translate('Predefined text that states admin will decide on each request for a user account'); ?></option>
-							<option value="3" <?php if ($WELCOME_TEXT_AUTH_MODE=='3') echo "selected=\"selected\""; ?>><?php echo WT_I18N::translate('Predefined text that states only family members can request a user account'); ?></option>
-							<option value="4" <?php if ($WELCOME_TEXT_AUTH_MODE=='4') echo "selected=\"selected\""; ?>><?php echo WT_I18N::translate('Choose user defined welcome text typed below'); ?></option>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<?php echo WT_I18N::translate('Standard header for custom welcome text'), help_link('WELCOME_TEXT_AUTH_MODE_CUST_HEAD'); ?>
-					</td>
-					<td>
-						<?php echo edit_field_yes_no('NEW_WELCOME_TEXT_CUST_HEAD', get_gedcom_setting(WT_GED_ID, 'WELCOME_TEXT_CUST_HEAD')); ?>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<?php echo WT_I18N::translate('Custom welcome text'), help_link('WELCOME_TEXT_AUTH_MODE_CUST'); ?>
-					</td>
-					<td>
-						<textarea name="NEW_WELCOME_TEXT_AUTH_MODE_4" maxlength="255"><?php echo htmlspecialchars(get_gedcom_setting(WT_GED_ID, 'WELCOME_TEXT_AUTH_MODE_'.WT_LOCALE)); ?></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<?php echo WT_I18N::translate('Show acceptable use agreement on «Request new user account» page'), help_link('SHOW_REGISTER_CAUTION'); ?>
-					</td>
-					<td>
-						<?php echo edit_field_yes_no('NEW_SHOW_REGISTER_CAUTION', get_gedcom_setting(WT_GED_ID, 'SHOW_REGISTER_CAUTION')); ?>
-					</td>
-				</tr>
-				<tr>
-					<th colspan="2">
-						<?php echo WT_I18N::translate('User options'); ?>
-					</th>
-				</tr>
-				<tr>
-					<td>
-						<?php echo WT_I18N::translate('Theme dropdown selector for theme changes'), help_link('ALLOW_THEME_DROPDOWN'); ?>
-					</td>
-					<td>
-						<?php echo radio_buttons('NEW_ALLOW_THEME_DROPDOWN', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), get_gedcom_setting(WT_GED_ID, 'ALLOW_THEME_DROPDOWN')); ?>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<?php echo WT_I18N::translate('Default Theme'), help_link('THEME'); ?>
-					</td>
-					<td>
-						<select name="NEW_THEME_DIR">
-							<?php
-								echo '<option value="">', htmlspecialchars(WT_I18N::translate('<default theme>')), '</option>';
-								$current_themedir=get_gedcom_setting(WT_GED_ID, 'THEME_DIR');
-								foreach (get_theme_names() as $themename=>$themedir) {
-									echo '<option value="', $themedir, '"';
-									if ($themedir==$current_themedir) {
-										echo ' selected="selected"';
-									}
-									echo '>', $themename, '</option>';
-								}
-							?>
-						</select>
 					</td>
 				</tr>
 			</table>
@@ -778,7 +733,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 				</tr>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Min. no. of occurrences to be a "common surname"'), help_link('COMMON_NAMES_THRESHOLD'); ?>
+						<?php echo WT_I18N::translate('Min. no. of occurrences to be a “common surname”'), help_link('COMMON_NAMES_THRESHOLD'); ?>
 					</td>
 					<td>
 						<input type="text" name="NEW_COMMON_NAMES_THRESHOLD" value="<?php echo get_gedcom_setting(WT_GED_ID, 'COMMON_NAMES_THRESHOLD'); ?>" size="5" maxlength="5">
@@ -830,7 +785,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('Estimated dates for birth and death'), help_link('SHOW_EST_LIST_DATES'); ?>
 					</td>
 					<td>
-						<?php echo radio_buttons('NEW_SHOW_EST_LIST_DATES', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), get_gedcom_setting(WT_GED_ID, 'SHOW_EST_LIST_DATES')); ?>
+						<?php echo radio_buttons('NEW_SHOW_EST_LIST_DATES', array(false=>WT_I18N::translate('hide'), true=>WT_I18N::translate('show')), get_gedcom_setting(WT_GED_ID, 'SHOW_EST_LIST_DATES')); ?>
 					</td>
 				</tr>
 				<tr>
@@ -838,7 +793,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('The date and time of the last update'); ?>
 					</td>
 					<td>
-						<?php echo radio_buttons('NEW_SHOW_LAST_CHANGE', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), $SHOW_LAST_CHANGE); ?>
+						<?php echo radio_buttons('NEW_SHOW_LAST_CHANGE', array(false=>WT_I18N::translate('hide'), true=>WT_I18N::translate('show')), $SHOW_LAST_CHANGE); ?>
 					</td>
 				</tr>
 				<tr>
@@ -974,6 +929,28 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						?>
 					</td>
 				</tr>
+				<tr>
+					<th colspan="2">
+						<?php echo WT_I18N::translate('Format'); ?>
+					</th>
+				</tr>
+				<tr>
+					<td>
+						<?php echo WT_I18N::translate('Format text and notes'), help_link('FORMAT_TEXT'); ?>
+					</td>
+					<td>
+						<?php
+						echo select_edit_control('NEW_FORMAT_TEXT',
+								array(
+									''         => WT_I18N::translate('none'),
+									'markdown' => /* I18N: https://en.wikipedia.org/wiki/Markdown */ WT_I18N::translate('markdown')
+								),
+								null,
+								get_gedcom_setting(WT_GED_ID, 'FORMAT_TEXT')
+							);
+						?>
+					</td>
+				</tr>
 			</table>
 		</div>
 		<!-- HIDE & SHOW -->
@@ -986,18 +963,10 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 				</tr>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Abbreviate chart labels'), help_link('ABBREVIATE_CHART_LABELS'); ?>
+						<?php echo WT_I18N::translate('Show chart details by default'), help_link('PEDIGREE_FULL_DETAILS'); ?>
 					</td>
 					<td>
-						<?php echo edit_field_yes_no('NEW_ABBREVIATE_CHART_LABELS', get_gedcom_setting(WT_GED_ID, 'ABBREVIATE_CHART_LABELS')); ?>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<?php echo WT_I18N::translate('Birth and death details on charts'), help_link('PEDIGREE_FULL_DETAILS'); ?>
-					</td>
-					<td>
-						<?php echo radio_buttons('NEW_PEDIGREE_FULL_DETAILS', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), $PEDIGREE_FULL_DETAILS); ?>
+						<?php echo edit_field_yes_no('NEW_PEDIGREE_FULL_DETAILS', get_gedcom_setting(WT_GED_ID, 'PEDIGREE_FULL_DETAILS')); ?>
 					</td>
 				</tr>
 				<tr>
@@ -1005,15 +974,15 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('Gender icon on charts'), help_link('PEDIGREE_SHOW_GENDER'); ?>
 					</td>
 					<td>
-						<?php echo radio_buttons('NEW_PEDIGREE_SHOW_GENDER', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), $PEDIGREE_SHOW_GENDER); ?>
+						<?php echo radio_buttons('NEW_PEDIGREE_SHOW_GENDER', array(false=>WT_I18N::translate('hide'), true=>WT_I18N::translate('show')), $PEDIGREE_SHOW_GENDER); ?>
 					</td>
 				</tr>
 				<tr>
 					<td>
-						<?php echo WT_I18N::translate('Age of parents next to child\'s birthdate'), help_link('SHOW_PARENTS_AGE'); ?>
+						<?php echo WT_I18N::translate('Age of parents next to child’s birthdate'), help_link('SHOW_PARENTS_AGE'); ?>
 					</td>
 					<td>
-						<?php echo radio_buttons('NEW_SHOW_PARENTS_AGE', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), $SHOW_PARENTS_AGE); ?>
+						<?php echo radio_buttons('NEW_SHOW_PARENTS_AGE', array(false=>WT_I18N::translate('hide'), true=>WT_I18N::translate('show')), $SHOW_PARENTS_AGE); ?>
 					</td>
 				</tr>
 				<tr>
@@ -1021,7 +990,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('LDS ordinance codes in chart boxes'), help_link('SHOW_LDS_AT_GLANCE'); ?>
 					</td>
 					<td>
-						<?php echo radio_buttons('NEW_SHOW_LDS_AT_GLANCE', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), $SHOW_LDS_AT_GLANCE); ?>
+						<?php echo radio_buttons('NEW_SHOW_LDS_AT_GLANCE', array(false=>WT_I18N::translate('hide'), true=>WT_I18N::translate('show')), $SHOW_LDS_AT_GLANCE); ?>
 					</td>
 				</tr>
 				<tr>
@@ -1042,7 +1011,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('Fact icons'), help_link('SHOW_FACT_ICONS'); ?>
 					</td>
 					<td>
-						<?php echo radio_buttons('NEW_SHOW_FACT_ICONS', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), $SHOW_FACT_ICONS); ?>
+						<?php echo radio_buttons('NEW_SHOW_FACT_ICONS', array(false=>WT_I18N::translate('hide'), true=>WT_I18N::translate('show')), $SHOW_FACT_ICONS); ?>
 					</td>
 				</tr>
 				<tr>
@@ -1074,7 +1043,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('Date differences'), help_link('SHOW_AGE_DIFF'); ?>
 					</td>
 					<td>
-						<?php echo radio_buttons('NEW_SHOW_AGE_DIFF', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), $SHOW_AGE_DIFF); ?>
+						<?php echo radio_buttons('NEW_SHOW_AGE_DIFF', array(false=>WT_I18N::translate('hide'), true=>WT_I18N::translate('show')), $SHOW_AGE_DIFF); ?>
 					</td>
 				</tr>
 				<tr>
@@ -1095,7 +1064,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('GEDCOM errors'), help_link('HIDE_GEDCOM_ERRORS'); ?>
 					</td>
 					<td>
-						<?php echo radio_buttons('NEW_HIDE_GEDCOM_ERRORS', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), !$HIDE_GEDCOM_ERRORS); /* Note: name of object is reverse of description */ ?>
+						<?php echo radio_buttons('NEW_HIDE_GEDCOM_ERRORS', array(true=>WT_I18N::translate('hide'), false=>WT_I18N::translate('show')), $HIDE_GEDCOM_ERRORS); /* Note: name of object is reverse of description */ ?>
 					</td>
 				</tr>
 				<tr>
@@ -1103,7 +1072,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('Hit counters'), help_link('SHOW_COUNTER'); ?>
 					</td>
 					<td>
-						<?php echo radio_buttons('NEW_SHOW_COUNTER', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), $SHOW_COUNTER); ?>
+						<?php echo radio_buttons('NEW_SHOW_COUNTER', array(false=>WT_I18N::translate('hide'), true=>WT_I18N::translate('show')), $SHOW_COUNTER); ?>
 					</td>
 				</tr>
 				<tr>
@@ -1111,7 +1080,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 						<?php echo WT_I18N::translate('Execution statistics'), help_link('SHOW_STATS'); ?>
 					</td>
 					<td>
-						<?php echo radio_buttons('NEW_SHOW_STATS', array(false=>WT_I18N::translate('hide'),true=>WT_I18N::translate('show')), get_gedcom_setting(WT_GED_ID, 'SHOW_STATS')); ?>
+						<?php echo radio_buttons('NEW_SHOW_STATS', array(false=>WT_I18N::translate('hide'), true=>WT_I18N::translate('show')), get_gedcom_setting(WT_GED_ID, 'SHOW_STATS')); ?>
 					</td>
 				</tr>
 			</table>
@@ -1120,20 +1089,13 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 		<div id="edit-options">
 			<table>
 			<tr>
-				<td>
-					<?php echo WT_I18N::translate('Online editing'), help_link('ALLOW_EDIT_GEDCOM'); ?>
-				</td>
-				<td><?php echo radio_buttons('NEW_ALLOW_EDIT_GEDCOM', array(false=>WT_I18N::translate('disable'),true=>WT_I18N::translate('enable')), $ALLOW_EDIT_GEDCOM); ?>
-				</td>
-			</tr>
-			<tr>
 				<th colspan="2">
-					<?php echo WT_I18N::translate('Facts for Individual records'); ?>
+					<?php echo WT_I18N::translate('Facts for individual records'); ?>
 				</th>
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('All facts'), help_link('INDI_FACTS_ADD'); ?>
+					<?php echo WT_I18N::translate('All individual facts'), help_link('INDI_FACTS_ADD'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_INDI_FACTS_ADD" name="NEW_INDI_FACTS_ADD" value="<?php echo get_gedcom_setting(WT_GED_ID, 'INDI_FACTS_ADD'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_INDI_FACTS_ADD'); ?>
@@ -1141,7 +1103,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('Unique facts'), help_link('INDI_FACTS_UNIQUE'); ?>
+					<?php echo WT_I18N::translate('Unique individual facts'), help_link('INDI_FACTS_UNIQUE'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_INDI_FACTS_UNIQUE" name="NEW_INDI_FACTS_UNIQUE" value="<?php echo get_gedcom_setting(WT_GED_ID, 'INDI_FACTS_UNIQUE'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_INDI_FACTS_UNIQUE'); ?>
@@ -1149,7 +1111,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('New entry facts'), help_link('QUICK_REQUIRED_FACTS'); ?>
+					<?php echo WT_I18N::translate('Facts for new individuals'), help_link('QUICK_REQUIRED_FACTS'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_QUICK_REQUIRED_FACTS" name="NEW_QUICK_REQUIRED_FACTS" value="<?php echo $QUICK_REQUIRED_FACTS; ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_QUICK_REQUIRED_FACTS'); ?>
@@ -1157,7 +1119,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('Quick facts'), help_link('INDI_FACTS_QUICK'); ?>
+					<?php echo WT_I18N::translate('Quick individual facts'), help_link('INDI_FACTS_QUICK'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_INDI_FACTS_QUICK" name="NEW_INDI_FACTS_QUICK" value="<?php echo get_gedcom_setting(WT_GED_ID, 'INDI_FACTS_QUICK'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_INDI_FACTS_QUICK'); ?>
@@ -1165,12 +1127,12 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<th colspan="2">
-					<?php echo WT_I18N::translate('Facts for Family records'); ?>
+					<?php echo WT_I18N::translate('Facts for family records'); ?>
 				</th>
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('All facts'), help_link('FAM_FACTS_ADD'); ?>
+					<?php echo WT_I18N::translate('All family facts'), help_link('FAM_FACTS_ADD'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_FAM_FACTS_ADD" name="NEW_FAM_FACTS_ADD" value="<?php echo get_gedcom_setting(WT_GED_ID, 'FAM_FACTS_ADD'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_FAM_FACTS_ADD'); ?>
@@ -1178,7 +1140,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('Unique facts'), help_link('FAM_FACTS_UNIQUE'); ?>
+					<?php echo WT_I18N::translate('Unique family facts'), help_link('FAM_FACTS_UNIQUE'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_FAM_FACTS_UNIQUE" name="NEW_FAM_FACTS_UNIQUE" value="<?php echo get_gedcom_setting(WT_GED_ID, 'FAM_FACTS_UNIQUE'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_FAM_FACTS_UNIQUE'); ?>
@@ -1186,7 +1148,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('New entry facts'), help_link('QUICK_REQUIRED_FAMFACTS'); ?>
+					<?php echo WT_I18N::translate('Facts for new families'), help_link('QUICK_REQUIRED_FAMFACTS'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_QUICK_REQUIRED_FAMFACTS" name="NEW_QUICK_REQUIRED_FAMFACTS" value="<?php echo $QUICK_REQUIRED_FAMFACTS; ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_QUICK_REQUIRED_FAMFACTS'); ?>
@@ -1194,7 +1156,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('Quick facts'), help_link('FAM_FACTS_QUICK'); ?>
+					<?php echo WT_I18N::translate('Quick family facts'), help_link('FAM_FACTS_QUICK'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_FAM_FACTS_QUICK" name="NEW_FAM_FACTS_QUICK" value="<?php echo get_gedcom_setting(WT_GED_ID, 'FAM_FACTS_QUICK'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_FAM_FACTS_QUICK'); ?>
@@ -1202,12 +1164,12 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<th colspan="2">
-					<?php echo WT_I18N::translate('Facts for Source records'); ?>
+					<?php echo WT_I18N::translate('Facts for source records'); ?>
 				</th>
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('All facts'), help_link('SOUR_FACTS_ADD'); ?>
+					<?php echo WT_I18N::translate('All source facts'), help_link('SOUR_FACTS_ADD'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_SOUR_FACTS_ADD" name="NEW_SOUR_FACTS_ADD" value="<?php echo get_gedcom_setting(WT_GED_ID, 'SOUR_FACTS_ADD'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_SOUR_FACTS_ADD'); ?>
@@ -1215,7 +1177,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('Unique facts'), help_link('SOUR_FACTS_UNIQUE'); ?>
+					<?php echo WT_I18N::translate('Unique source facts'), help_link('SOUR_FACTS_UNIQUE'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_SOUR_FACTS_UNIQUE" name="NEW_SOUR_FACTS_UNIQUE" value="<?php echo get_gedcom_setting(WT_GED_ID, 'SOUR_FACTS_UNIQUE'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_SOUR_FACTS_UNIQUE'); ?>
@@ -1223,7 +1185,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('Quick facts'), help_link('SOUR_FACTS_QUICK'); ?>
+					<?php echo WT_I18N::translate('Quick source facts'), help_link('SOUR_FACTS_QUICK'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_SOUR_FACTS_QUICK" name="NEW_SOUR_FACTS_QUICK" value="<?php echo get_gedcom_setting(WT_GED_ID, 'SOUR_FACTS_QUICK'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_SOUR_FACTS_QUICK'); ?>
@@ -1231,12 +1193,12 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<th colspan="2">
-					<?php echo WT_I18N::translate('Facts for Repository records'); ?>
+					<?php echo WT_I18N::translate('Facts for repository records'); ?>
 				</th>
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('All facts'), help_link('REPO_FACTS_ADD'); ?>
+					<?php echo WT_I18N::translate('All repository facts'), help_link('REPO_FACTS_ADD'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_REPO_FACTS_ADD" name="NEW_REPO_FACTS_ADD" value="<?php echo get_gedcom_setting(WT_GED_ID, 'REPO_FACTS_ADD'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_REPO_FACTS_ADD'); ?>
@@ -1244,7 +1206,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('Unique facts'), help_link('REPO_FACTS_UNIQUE'); ?>
+					<?php echo WT_I18N::translate('Unique repository facts'), help_link('REPO_FACTS_UNIQUE'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_REPO_FACTS_UNIQUE" name="NEW_REPO_FACTS_UNIQUE" value="<?php echo get_gedcom_setting(WT_GED_ID, 'REPO_FACTS_UNIQUE'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_REPO_FACTS_UNIQUE'); ?>
@@ -1252,7 +1214,7 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('Quick facts'), help_link('REPO_FACTS_QUICK'); ?>
+					<?php echo WT_I18N::translate('Quick repository facts'), help_link('REPO_FACTS_QUICK'); ?>
 				</td>
 				<td>
 					<input type="text" id="NEW_REPO_FACTS_QUICK" name="NEW_REPO_FACTS_QUICK" value="<?php echo get_gedcom_setting(WT_GED_ID, 'REPO_FACTS_QUICK'); ?>" size="60" maxlength="255" dir="ltr"><?php echo print_findfact_link('NEW_REPO_FACTS_QUICK'); ?>
@@ -1310,10 +1272,10 @@ if (count(WT_Tree::getAll())==1) { //Removed because it doesn't work here for mu
 			</tr>
 			<tr>
 				<td>
-					<?php echo WT_I18N::translate('Use GeoNames database for autocomplete on places'), help_link('USE_GEONAMES'); ?>
+					<?php echo /* I18N: GeoNames is the www.geonames.org website */ WT_I18N::translate('Use GeoNames database for autocomplete on places'), help_link('GEONAMES_ACCOUNT'); ?>
 				</td>
 				<td>
-					<?php echo edit_field_yes_no('NEW_USE_GEONAMES', get_gedcom_setting(WT_GED_ID, 'USE_GEONAMES')); ?>
+					<input type="text" id="NEW_GEONAMES_ACCOUNT" name="NEW_GEONAMES_ACCOUNT" value="<?php echo WT_Filter::escapeHtml(get_gedcom_setting(WT_GED_ID, 'GEONAMES_ACCOUNT')); ?>" size="40" maxlength="255" dir="ltr" placeholder="<?php echo WT_I18N::translate('Username'); ?>">
 				</td>
 			</tr>
 			<tr>

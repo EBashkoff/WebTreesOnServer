@@ -10,7 +10,7 @@ if (!$canadmin) {
     exit;
 }
 
-$submit = safe_POST('update');
+$submit = WT_Filter::post('update');
 
 // ************************  BEGIN = 'Build the folderlist array' ************************
 

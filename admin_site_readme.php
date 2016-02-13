@@ -2,7 +2,7 @@
 // UI for online updating of the config file.
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,46 +16,26 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: admin_site_readme.php 14786 2013-02-06 22:28:50Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'admin_site_readme.php');
+
 require './includes/session.php';
 
-$controller=new WT_Controller_Page();
+$controller = new WT_Controller_Page();
 $controller
 	->requireAdminLogin()
 	->setPageTitle(WT_I18N::translate('README documentation'))
 	->pageHeader();
 
-function get_tag($txt,$tag){
-	$offset = 0;
-	$start_tag = "<".$tag;
-	$end_tag = "</".$tag.">";
-	$arr = array();
-	do{
-		$pos = strpos($txt,$start_tag,$offset);
-		if($pos){
-			$str_pos = strpos($txt,">",$pos)+1;
-			$end_pos = strpos($txt,$end_tag,$str_pos);
-			$len = $end_pos - $str_pos;
-			$f_text = substr($txt,$str_pos,$len);
-			$arr[] = $f_text;
-			$offset = $end_pos;
-		}
-	}while($pos);
-	return $arr;
-}
-	
-echo '<div id="readme" dir="ltr" lang="en">'; // This information is always LTR/English
+// This information is always LTR/English
+?>
+<div class="markdown" dir="ltr" lang="en">
+	<?php
+		use \Michelf\MarkdownExtra;
 
-$url = 'readme.html';
-$txt = file_get_contents($url);
-$arr = get_tag($txt, "body");
-
-foreach ($arr as $value) {
-	echo $value;
-}
-	
-echo '</div>';
+		echo MarkdownExtra::defaultTransform(
+			file_get_contents('README.md')
+		);
+	?>
+</div>

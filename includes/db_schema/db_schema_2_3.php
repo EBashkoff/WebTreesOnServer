@@ -2,7 +2,7 @@
 // Update the database schema from version 2 to version 3
 // - create the wt_gedcom_chunk table to import gedcoms in
 // blocks of data smaller than the max_allowed_packet restriction.
-// 
+//
 // The script should assume that it can be interrupted at
 // any point, and be able to continue by re-running the script.
 // Fatal errors, however, should be allowed to throw exceptions,
@@ -11,7 +11,7 @@
 // seconds, for systems with low timeout values.
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2011 Greg Roach
+// Copyright (C) 2014 Greg Roach
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,9 +25,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: db_schema_2_3.php 14276 2012-09-14 15:39:40Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 if (!defined('WT_WEBTREES')) {
 	header('HTTP/1.0 403 Forbidden');

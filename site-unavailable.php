@@ -2,7 +2,7 @@
 // Site Unavailable
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2012 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,16 +16,18 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: site-unavailable.php 13910 2012-05-05 12:30:35Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'site-unavailable.php');
 
+require 'library/autoload.php';
+
 // This script does not load session.php.
-// session.php won't run until a configuration file and database connection exist...
+// session.php won’t run until a configuration file and database connection exist...
 // This next block of code is a minimal version of session.php
 define('WT_WEBTREES', 'webtrees');
+define('WT_SERVER_NAME', '');
+define('WT_SCRIPT_PATH', '');
 define('WT_ROOT', '');
 define('WT_GED_ID', 0);
 define('WT_USER_ID', 0);
@@ -33,10 +35,6 @@ define('WT_DATA_DIR', realpath('data').DIRECTORY_SEPARATOR);
 define('WT_DEBUG_LANG', false); // The translation library needs this
 $WT_SESSION=new stdClass();
 $WT_SESSION->locale='';
-// Invoke the Zend Framework Autoloader, so we can use Zend_XXXXX and WT_XXXXX classes
-set_include_path(WT_ROOT.'library'.PATH_SEPARATOR.get_include_path());
-require_once 'Zend/Loader/Autoloader.php';
-Zend_Loader_Autoloader::getInstance()->registerNamespace('WT_');
 require 'includes/functions/functions.php';
 require WT_ROOT.'includes/functions/functions_utf-8.php';
 define('WT_LOCALE', WT_I18N::init());

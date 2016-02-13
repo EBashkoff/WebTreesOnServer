@@ -2,7 +2,7 @@
 // Callback function for inline editing.
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2012 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,9 +16,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: save.php 14294 2012-09-15 11:36:34Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'save.php');
 require './includes/session.php';
@@ -38,15 +36,20 @@ function fail() {
 	exit;
 }
 
+// Do we have a valid CSRF token?
+if (!WT_Filter::checkCsrf()) {
+	fail();
+}
+
 // The data item to updated must identified with a single "id" element.
 // The id must be a valid CSS identifier, so it can be used in HTML.
 // We use "[A-Za-z0-9_]+" separated by "-".
 
-$id=safe_POST('id', '[a-zA-Z0-9_-]+');
+$id=WT_Filter::post('id', '[a-zA-Z0-9_-]+');
 list($table, $id1, $id2, $id3)=explode('-', $id.'---');
 
 // The replacement value.
-$value=safe_POST('value', WT_REGEX_UNSAFE);
+$value=WT_Filter::post('value');
 
 // Every switch must have a default case, and every case must end in ok() or fail()
 
@@ -92,18 +95,20 @@ case 'site_setting':
 			fail();
 		}
 		break;
-	case 'STORE_MESSAGES':
 	case 'USE_REGISTRATION_MODULE':
 	case 'REQUIRE_ADMIN_AUTH_REGISTRATION':
 	case 'ALLOW_USER_THEMES':
 	case 'ALLOW_CHANGE_GEDCOM':
 	case 'SMTP_AUTH':
+	case 'SHOW_REGISTER_CAUTION':
 		$value=(int)$value;
 		break;
+	case 'WELCOME_TEXT_AUTH_MODE_4':
+		// Save a different version of this for each language.
+		$id1 = 'WELCOME_TEXT_AUTH_MODE_' . WT_LOCALE;
+		break;
 	case 'LOGIN_URL':
-		if ($value=='') {
-			$value=null; // Empty string is invalid - delete the row
-		} elseif (!preg_match('/^https?:\/\//', $value)) {
+		if ($value && !preg_match('/^https?:\/\//', $value)) {
 			fail();
 		}
 		break;
@@ -115,6 +120,7 @@ case 'site_setting':
 	case 'SMTP_HELO':
 	case 'SMTP_HOST':
 	case 'SMTP_SSL':
+	case 'WELCOME_TEXT_AUTH_MODE':
 		break;
 	case 'SMTP_AUTH_PASS':
 		// The password will be displayed as "click to edit" on screen.
@@ -124,7 +130,7 @@ case 'site_setting':
 		}
 		fail();
 	default:
-		// An unrecognised setting
+		// An unrecognized setting
 		fail();
 	}
 
@@ -167,7 +173,7 @@ case 'user':
 	//////////////////////////////////////////////////////////////////////////////
 
 	// Authorisation
-	if (!(WT_USER_IS_ADMIN || WT_USER_ID && WT_USER==$id2)) {
+	if (!(WT_USER_IS_ADMIN || WT_USER_ID && WT_USER_ID==$id2)) {
 		fail();
 	}
 
@@ -185,7 +191,7 @@ case 'user':
 	case 'email':
 		break;
 	default:
-		// An unrecognised setting
+		// An unrecognized setting
 		fail();
 	}
 
@@ -219,7 +225,7 @@ case 'user_gedcom_setting':
 	case 'RELATIONSHIP_PATH_LENGTH':
 		break;
 	default:
-		// An unrecognised setting
+		// An unrecognized setting
 		fail();
 	}
 
@@ -234,7 +240,7 @@ case 'user_setting':
 	//////////////////////////////////////////////////////////////////////////////
 
 	// Authorisation
-	if (!(WT_USER_IS_ADMIN || WT_USER_ID && get_user_setting($id1, 'editaccount') && _array($id2, array('language','visible_online','contact_method')))) {
+	if (!(WT_USER_IS_ADMIN || WT_USER_ID && get_user_setting($id1, 'editaccount') && in_array($id2, array('language','visible_online','contact_method')))) {
 		fail();
 	}
 
@@ -249,23 +255,12 @@ case 'user_setting':
 	case 'verified_by_admin':
 		// Approving for the first time?  Send a confirmation email
 		if ($value && get_user_setting($id1, $id2)!=$value && get_user_setting($id1, 'sessiontime')==0) {
-			require_once WT_ROOT.'includes/functions/functions_mail.php';
 			WT_I18N::init(get_user_setting($id1, 'language'));
-//  *************************************************************************************         
-//  **********        
-//  **********MY SITE EDIT:  REPLACE THE FOLLOWING CALL TO WEBTREESMAIL TO CHANGE THE EMAIL APPROVAL MESSAGE         
-//                         
-//			webtreesMail(
-//				getUserEmail($id1),
-//				$WEBTREES_EMAIL,
-//				WT_I18N::translate('Approval of account at %s', WT_SERVER_NAME.WT_SCRIPT_PATH),
-//				WT_I18N::translate('The administrator at the webtrees site %s has approved your application for an account.  You may now login by accessing the following link: %s', WT_SERVER_NAME.WT_SCRIPT_PATH, WT_SERVER_NAME.WT_SCRIPT_PATH)
-//			);
-			webtreesMail(
-				getUserEmail($id1),
-				$WEBTREES_EMAIL,
-				'Approval of account at the Bashkoff Family Web Site',
-				WT_I18N::translate('The administrator at the site %s has approved your application for an account.  You may now login by accessing the following link: %s.  Thank you for visiting the website!', 'https://www.bashkoff-family.com', 'https://www.bashkoff-family.com')
+			WT_Mail::system_message(
+				$WT_TREE,
+				$id1,
+				WT_I18N::translate('Approval of account at %s', WT_SERVER_NAME.WT_SCRIPT_PATH),
+				WT_I18N::translate('The administrator at the webtrees site %s has approved your application for an account.  You may now login by accessing the following link: %s', WT_SERVER_NAME.WT_SCRIPT_PATH, WT_SERVER_NAME.WT_SCRIPT_PATH)
 			);
 		}
 		break;
@@ -282,7 +277,7 @@ case 'user_setting':
 	case 'theme':
 		break;
 	default:
-		// An unrecognised setting
+		// An unrecognized setting
 		fail();
 	}
 
@@ -314,6 +309,6 @@ case 'module':
 	}
 
 default:
-	// An unrecognised table
+	// An unrecognized table
 	fail();
 }

@@ -2,10 +2,10 @@
 // Allow an admin user to download the entire gedcom file.
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
-// Copyright (C) 2002 to 2009  PGV Development Team.  All rights reserved.
+// Copyright (C) 2002 to 2009 PGV Development Team.  All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,9 +19,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: admin_trees_download.php 14915 2013-03-25 11:49:51Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'admin_trees_download.php');
 require './includes/session.php';
@@ -33,11 +31,11 @@ $controller
 	->requireManagerLogin();
 
 // Validate user parameters
-$action           = safe_GET('action',           'download');
-$convert          = safe_GET('convert',          'yes', 'no');
-$zip              = safe_GET('zip',              'yes', 'no');
-$conv_path        = safe_GET('conv_path',        WT_REGEX_NOSCRIPT);
-$privatize_export = safe_GET('privatize_export', array('none', 'visitor', 'user', 'gedadmin'));
+$action           = WT_Filter::get('action',           'download');
+$convert          = WT_Filter::get('convert',          'yes|no', 'no');
+$zip              = WT_Filter::get('zip',              'yes|no', 'no');
+$conv_path        = WT_Filter::get('conv_path');
+$privatize_export = WT_Filter::get('privatize_export', 'none|visitor|user|gedadmin');
 
 if ($action == 'download') {
 	$exportOptions = array();
@@ -67,7 +65,7 @@ if ($action == "download" && $zip == "yes") {
 	$gedout = fopen($gedname, "w");
 	export_gedcom($GEDCOM, $gedout, $exportOptions);
 	fclose($gedout);
-	$comment = "Created by ".WT_WEBTREES." ".WT_VERSION_TEXT." on " . date("r") . ".";
+	$comment = "Created by ".WT_WEBTREES." ".WT_VERSION." on " . date("r") . ".";
 	$archive = new PclZip($zipfile);
 	$v_list = $archive->create($gedname, PCLZIP_OPT_COMMENT, $comment, PCLZIP_OPT_REMOVE_PATH, $temppath);
 	if ($v_list == 0) echo "Error : " . $archive->errorInfo(true);
@@ -97,14 +95,14 @@ if ($action == "download") {
 $controller->pageHeader();
 
 ?>
-<h2><?php echo $controller->getPageTitle(); ?> - <?php echo htmlspecialchars(WT_GEDCOM); ?></h2>
+<h2><?php echo $controller->getPageTitle(); ?> - <?php echo WT_Filter::escapeHtml(WT_GEDCOM); ?></h2>
 <form name="convertform" method="get">
 	<input type="hidden" name="action" value="download">
 	<input type="hidden" name="ged" value="<?php echo WT_GEDCOM; ?>">
 	<div id="tree-download" class="ui-helper-clearfix">
 		<dl>
 			<dt>
-				<?php echo WT_I18N::translate('Zip File(s)'), help_link('download_zipped'); ?>
+				<?php echo WT_I18N::translate('Zip file(s)'), help_link('download_zipped'); ?>
 			</dt>
 			<dd>
 				<input type="checkbox" name="zip" value="yes">
@@ -128,11 +126,11 @@ $controller->pageHeader();
 				<input type="checkbox" name="convert" value="yes">
 			</dd>
 			<dt>
-				<?php echo WT_I18N::translate('GEDCOM media path'), help_link('GEDCOM_MEDIA_PATH'); ?>
+				<?php echo WT_I18N::translate('Add the GEDCOM media path to filenames'), help_link('GEDCOM_MEDIA_PATH'); ?>
 			</dt>
 			<dd>
-				<input type="checkbox" name="conv_path" value="<?php echo htmlspecialchars($GEDCOM_MEDIA_PATH); ?>">
-				<span dir="auto"><?php echo htmlspecialchars($GEDCOM_MEDIA_PATH); ?></span>
+				<input type="checkbox" name="conv_path" value="<?php echo WT_Filter::escapeHtml($GEDCOM_MEDIA_PATH); ?>">
+				<span dir="auto"><?php echo WT_Filter::escapeHtml($GEDCOM_MEDIA_PATH); ?></span>
 			</dd>
 		</dl>
 	</div>

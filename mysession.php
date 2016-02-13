@@ -5,9 +5,11 @@ define('FILE_PATH_PREFIX', "./");
 define('HTACCESS_PREFIX_CHARS', '<FilesMatch "\.(gif|png|jpe?g)$">' . "\r\nOrder Deny,Allow\r\nDeny from all\r\nAllow from ");
 define('HTACCESS_POSTFIX_CHARS', "\r\n</FilesMatch>");
 
+require_once 'library/WT/Filter.php';  # For safe GET and POST used throughout project
+
 $BROWSERTYPE = get_BROWSERTYPE();
 $sidfromcookie = $_COOKIE['WT_SESSION'];
-$uidfromget = safe_GET('userid') ?: safe_POST('userid');
+$uidfromget = WT_Filter::get('userid') ?: WT_Filter::post('userid');
 if (!$sidfromcookie) {
     echo "*** ERROR: Your browser's cookies must be enabled to use this site ***";
     exit;
@@ -114,43 +116,6 @@ function get_BROWSERTYPE() {
             return 'msie';
     } else {
             return 'other';
-    }
-}
-
-function safe_GET($var, $regex = WT_REGEX_NOSCRIPT, $default = null) {
-    return safe_REQUEST($_GET, $var, $regex, $default);
-}
-
-function safe_POST($var, $regex=WT_REGEX_NOSCRIPT, $default=null) {
-	return safe_REQUEST($_POST, $var, $regex, $default);
-}
-
-function safe_REQUEST($arr, $var, $regex = WT_REGEX_NOSCRIPT, $default = null) {
-    if (is_array($regex)) {
-        $regex = '(?:' . join('|', $regex) . ')';
-    }
-    if (array_key_exists($var, $arr) && preg_match_recursive('~^' . addcslashes($regex, '~') . '$~', $arr[$var])) {
-        return $arr[$var];
-    } else {
-        return $default;
-    }
-}
-
-function preg_match_recursive($regex, $var) {
-    if (is_scalar($var)) {
-        return preg_match($regex, $var);
-    } else {
-        if (is_array($var)) {
-            foreach ($var as $k => $v) {
-                if (!preg_match_recursive($regex, $v)) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            // Neither scalar nor array.  Object?
-            return false;
-        }
     }
 }
 ?>

@@ -2,10 +2,10 @@
 // Displays a place hierachy
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2013 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
-// Copyright (C) 2002 to 2010  PGV Development Team. All rights reserved.
+// Copyright (C) 2002 to 2010 PGV Development Team. All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,27 +19,23 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: placelist.php 14786 2013-02-06 22:28:50Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 define('WT_SCRIPT_NAME', 'placelist.php');
 require './includes/session.php';
 require_once WT_ROOT.'includes/functions/functions_print_lists.php';
 
-$controller=new WT_Controller_Page();
+$controller = new WT_Controller_Page();
 
-$action =safe_GET('action',  array('find', 'show'), 'find');
-$display=safe_GET('display', array('hierarchy', 'list'), 'hierarchy');
-$parent =safe_GET('parent', WT_REGEX_UNSAFE); // Place names may include HTML chars.  "Sunny View Cemetery", Smallville, <unknown>, Texas, USA"
-if (!is_array($parent)) {
-	$parent = array();
-}
+$action  = WT_Filter::get('action',  'find|show', 'find');
+$display = WT_Filter::get('display', 'hierarchy|list', 'hierarchy');
+$parent  = WT_Filter::getArray('parent');
+
 $level=count($parent);
 
 if ($display=='hierarchy') {
 	if ($level) {
-		$controller->setPageTitle(WT_I18N::translate('Place hierarchy') . ' - <span dir="auto">' . htmlspecialchars(end($parent)) . '</span>');
+		$controller->setPageTitle(WT_I18N::translate('Place hierarchy') . ' - <span dir="auto">' . WT_Filter::escapeHtml(end($parent)) . '</span>');
 	} else {
 		$controller->setPageTitle(WT_I18N::translate('Place hierarchy'));
 	}
@@ -81,21 +77,22 @@ case 'list':
 		echo '</ul></td></tr>';
 		echo '</table>';
 	}
-	echo '<h4><a href="placelist.php?display=hierarchy">', WT_I18N::translate('Show Places in Hierarchy'), '</a></h4>';
+	echo '<h4><a href="placelist.php?display=hierarchy">', WT_I18N::translate('Show places in hierarchy'), '</a></h4>';
 	break;
 case 'hierarchy':
-	$use_googlemap = array_key_exists('googlemap', WT_Module::getActiveModules()) && get_module_setting('googlemap', 'GM_PLACE_HIERARCHY');
-
-	if ($use_googlemap) {
-		require WT_ROOT.WT_MODULES_DIR.'googlemap/placehierarchy.php';
+	$all_modules = WT_Module::getActiveModules();
+	if (array_key_exists('googlemap', $all_modules)) {
+		$gm_module = $all_modules['googlemap'];
+	} else {
+		$gm_module = null;
 	}
-
+	
 	// Find this place and its ID
 	$place=new WT_Place(implode(', ', array_reverse($parent)), WT_GED_ID);
 	$place_id=$place->getPlaceId();
 
 	$child_places=$place->getChildPlaces();
-	
+
 	$numfound=count($child_places);
 
 	//-- if the number of places found is 0 then automatically redirect to search page
@@ -115,7 +112,7 @@ case 'hierarchy':
 	}
 	echo '</h2>';
 
-	if ($use_googlemap) {
+	if ($gm_module && $gm_module->getSetting('GM_PLACE_HIERARCHY')) {
 		$linklevels='';
 		$placelevels='';
 		$place_names=array();
@@ -127,7 +124,7 @@ case 'hierarchy':
 				$placelevels = ', ' . $parent[$j] . $placelevels;
 			}
 		}
-		create_map($placelevels);
+		$gm_module->create_map($placelevels);
 	} elseif (array_key_exists('places_assistant', WT_Module::getActiveModules())) {
 		// Places Assistant is a custom/add-on module that was once part of the core code.
 		places_assistant_WT_Module::display_map($level, $parent);
@@ -152,8 +149,9 @@ case 'hierarchy':
 		}
 
 		echo '<li><a href="', $child_place->getURL(), '" class="list_item">', $child_place->getPlaceName(), '</a></li>';
-		if ($use_googlemap) {
-			$place_names[$n]=$child_place->getPlaceName();
+		if ($gm_module && $gm_module->getSetting('GM_PLACE_HIERARCHY')) {
+			list($tmp) =  explode(', ', $child_place->getGedcomName(), 2);
+			$place_names[$n]=$tmp;
 		}
 		$n++;
 		if ($numfound > 20) {
@@ -196,33 +194,31 @@ case 'hierarchy':
 		// -- array of names
 		$myindilist = array();
 		$myfamlist = array();
-	
+
 		$positions=
 			WT_DB::prepare("SELECT DISTINCT pl_gid FROM `##placelinks` WHERE pl_p_id=? AND pl_file=?")
 			->execute(array($place_id, WT_GED_ID))
 			->fetchOneColumn();
-	
+
 		foreach ($positions as $position) {
 			$record=WT_GedcomRecord::getInstance($position);
-			if ($record && $record->canDisplayDetails()) {
-				switch ($record->getType()) {
-				case 'INDI':
+			if ($record && $record->canShow()) {
+				if ($record instanceof WT_Individual) {
 					$myindilist[]=$record;
-					break;
-				case 'FAM':
+				}
+				if ($record instanceof WT_Family) {
 					$myfamlist[]=$record;
-					break;
 				}
 			}
 		}
 		echo '<br>';
-	
+
 		//-- display results
 		$controller
 			->addInlineJavascript('jQuery("#places-tabs").tabs();')
 			->addInlineJavascript('jQuery("#places-tabs").css("visibility", "visible");')
 			->addInlineJavascript('jQuery(".loading-image").css("display", "none");');
-	
+
 		echo '<div class="loading-image">&nbsp;</div>';
 		echo '<div id="places-tabs"><ul>';
 		if ($myindilist) {
@@ -243,11 +239,11 @@ case 'hierarchy':
 		}
 		echo '</div>'; // <div id="places-tabs">
 	}
-	echo '<h4><a href="placelist.php?display=list">', WT_I18N::translate('Show All Places in a List'), '</a></h4>';
+	echo '<h4><a href="placelist.php?display=list">', WT_I18N::translate('Show all places in a list'), '</a></h4>';
 
-	if ($use_googlemap) {
+	if ($gm_module && $gm_module->getSetting('GM_PLACE_HIERARCHY')) {
 		echo '<link type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, 'googlemap/css/wt_v3_googlemap.css" rel="stylesheet">';
-		map_scripts($numfound, $level, $parent, $linklevels, $placelevels, $place_names);
+		$gm_module->map_scripts($numfound, $level, $parent, $linklevels, $placelevels, $place_names);
 	}
 	break;
 }

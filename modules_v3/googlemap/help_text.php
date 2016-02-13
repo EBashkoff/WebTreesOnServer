@@ -5,7 +5,7 @@
 // It simply needs to set $title and $text for the help topic $help_topic
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2011 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,9 +19,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: help_text.php 14772 2013-02-04 17:15:23Z greg $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 if (!defined('WT_WEBTREES') || !defined('WT_SCRIPT_NAME') || WT_SCRIPT_NAME!='help_text.php') {
 	header('HTTP/1.0 403 Forbidden');
@@ -29,19 +27,14 @@ if (!defined('WT_WEBTREES') || !defined('WT_SCRIPT_NAME') || WT_SCRIPT_NAME!='he
 }
 
 switch ($help) {
-case 'GOOGLEMAP_MAP_ZOOM':
-	$title=WT_I18N::translate('Zoom factor of map');
-	$text=WT_I18N::translate('Minimum and maximum zoom factor for the Google map. 1 is the full map, 15 is single house. Note that 15 is only available in certain areas.');
+case 'GM_MAP_ZOOM':
+	$title=WT_I18N::translate('Zoom level of map');
+	$text=WT_I18N::translate('Minimum and maximum zoom level for the Google map. 1 is the full map, 15 is single house. Note that 15 is only available in certain areas.');
 	break;
 
-case 'GOOGLEMAP_PRECISION':
+case 'GM_PRECISION':
 	$title=WT_I18N::translate('Precision of the latitude and longitude');
 	$text=WT_I18N::translate('This specifies the precision of the different levels when entering new geographic locations. For example a country will be specified with precision 0 (=0 digits after the decimal point), while a town needs 3 or 4 digits.');
-	break;
-
-case 'GM_DEFAULT_LEVEL_0':
-	$title=WT_I18N::translate('Default value for top-level');
-	$text=WT_I18N::translate('Here the default level for the highest level in the place-hierarchy can be defined. If a place cannot be found this name is added as the highest level (country) and the database is searched again.');
 	break;
 
 case 'GM_NAME_PREFIX_SUFFIX':
@@ -49,7 +42,7 @@ case 'GM_NAME_PREFIX_SUFFIX':
 	$text=WT_I18N::translate('Some place names may be written with optional prefixes and suffixes.  For example “Orange” versus “Orange County”.  If the family tree contains the full place names, but the geographic database contains the short place names, then you should specify a list of the prefixes and suffixes to be disregarded.  Multiple options should be separated with semicolons.  For example “County;County of” or “Township;Twp;Twp.”.');
 	break;
 
-case 'GOOGLEMAP_COORD':
+case 'GM_COORD':
 	$title=WT_I18N::translate('Display Map Coordinates');
 	$text=WT_I18N::translate('This options sets whether Latitude and Longitude are displayed on the pop-up window attached to map markers.');
 	break;
@@ -95,7 +88,7 @@ case 'PLE_ACTIVE':
 
 case 'GM_DISP_SHORT_PLACE':
 	$title=WT_I18N::translate('Display short placenames');
-	$text=WT_I18N::translate('Here you can choose between two types of displaying places names in hierarchy. If set Yes the place has short name or actual level name, if No - full name.<br /><b>Examples:<br />Full name: </b>Chicago, Illinois, USA<br /><b>Short name: </b>Chicago<br /><b>Full name: </b>Illinois, USA<br /><b>Short name: </b>Illinois');
+	$text=WT_I18N::translate('Here you can choose between two types of displaying places names in hierarchy. If set Yes the place has short name or actual level name, if No - full name.<br><b>Examples:<br>Full name: </b>Chicago, Illinois, USA<br><b>Short name: </b>Chicago<br><b>Full name: </b>Illinois, USA<br><b>Short name: </b>Illinois');
 	break;
 
 // Pedigree map

@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="css/styles.css" type="text/css" media="all">
 
 <!-- SCRIPTS -->
-<script type="text/javascript" src="js/jquery-1.9.1.js"></script>
+<script type="text/javascript" src="js/jquery-1.11.0.js"></script>
 <script type="text/javascript" src="js/jquery.smooth-expand-menu.js"></script>
 
 <!-- CUSTOM SCRIPT CALL -->

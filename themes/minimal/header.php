@@ -2,10 +2,10 @@
 // Header for Minimal theme
 //
 // webtrees: Web based Family History software
-// Copyright (C) 2012 webtrees development team.
+// Copyright (C) 2014 webtrees development team.
 //
 // Derived from PhpGedView
-// Copyright (C) 2002 to 2009  PGV Development Team.  All rights reserved.
+// Copyright (C) 2002 to 2009 PGV Development Team.  All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,9 +19,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// $Id: header.php 14896 2013-03-22 12:57:01Z rob $
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 if (!defined('WT_WEBTREES')) {
 	header('HTTP/1.0 403 Forbidden');
@@ -33,11 +31,12 @@ $this
 	->addExternalJavascript(WT_JQUERY_COLORBOX_URL)
 	->addExternalJavascript(WT_JQUERY_WHEELZOOM_URL)
 	->addInlineJavascript('activate_colorbox();')
+	->addInlineJavascript('jQuery.extend(jQuery.colorbox.settings, {width:"85%", height:"85%", transition:"none", slideshowStart:"'. WT_I18N::translate('Play').'", slideshowStop:"'. WT_I18N::translate('Stop').'"})')
 	->addInlineJavascript('
 		jQuery.extend(jQuery.colorbox.settings, {
-			title:	function(){
-					var img_title = jQuery(this).data("title");
-					return img_title;
+			title: function() {
+				var img_title = jQuery(this).data("title");
+				return img_title;
 			}
 		});
 	');
@@ -46,23 +45,15 @@ echo
 	'<html ', WT_I18N::html_markup(), '>',
 	'<head>',
 	'<meta charset="UTF-8">',
-	'<title>', htmlspecialchars($title), '</title>',
+	'<meta http-equiv="X-UA-Compatible" content="IE=edge">',
 	header_links($META_DESCRIPTION, $META_ROBOTS, $META_GENERATOR, $LINK_CANONICAL),
-	'<link rel="icon" href="', WT_THEME_URL, 'favicon.png" type="image/png">',
-	'<link rel="stylesheet" type="text/css" href="', WT_THEME_URL, 'jquery-ui-1.10.0/jquery-ui-1.10.0.custom.css">',
-	'<link rel="stylesheet" type="text/css" href="', WT_THEME_URL, 'style.css', '">';
-
-switch ($BROWSERTYPE) {
-//case 'chrome': uncomment when chrome.css file needs to be added, or add others as needed
-case 'msie':
-	echo '<link type="text/css" rel="stylesheet" href="', WT_THEME_URL, $BROWSERTYPE, '.css">';
-	break;
-}
-
-// Additional css files required (Only if Lightbox installed)
-if (WT_USE_LIGHTBOX) {
-		echo '<link rel="stylesheet" type="text/css" href="', WT_STATIC_URL, WT_MODULES_DIR, 'lightbox/css/album_page.css" media="screen">';
-}
+	'<title>', WT_Filter::escapeHtml($title), '</title>',
+	'<link rel="icon" href="', WT_CSS_URL, 'favicon.png" type="image/png">',
+	'<link rel="stylesheet" type="text/css" href="', WT_THEME_URL, 'jquery-ui-1.10.3/jquery-ui-1.10.3.custom.css">',
+	'<link rel="stylesheet" type="text/css" href="', WT_CSS_URL, 'style.css">',
+	'<!--[if IE]>',
+	'<link type="text/css" rel="stylesheet" href="', WT_CSS_URL, 'msie.css">',
+	'<![endif]-->';
 
 echo
 	'</head>',
@@ -71,9 +62,9 @@ echo
 // begin header section
 if ($view!='simple') {
 	echo '<div id="header">';
+	echo '<div id="header-title" dir="auto">', WT_TREE_TITLE, '</div>';
+	echo '<div id="header-user-links">';
 	echo '<ul class="makeMenu">';
-	echo '<li class="title" dir="auto">', WT_TREE_TITLE ,'</li>';
-	echo '<div>';
 	if (WT_USER_ID) {
 		echo '<li><a href="edituser.php">', getUserFullName(WT_USER_ID), '</a></li> <li>', logout_link(), '</li>';
 		if (WT_USER_CAN_ACCEPT && exists_pending_change()) {
@@ -97,10 +88,11 @@ if ($view!='simple') {
 	echo
 		'<li><form style="display:inline;" action="search.php" method="post">',
 		'<input type="hidden" name="action" value="general">',
+		'<input type="hidden" name="ged" value="', WT_GEDCOM, '">',
 		'<input type="hidden" name="topsearch" value="yes">',
-		'<input type="search" name="query" size="20" placeholder="', WT_I18N::translate('Search'), '" dir="auto">',
-		'</form></li></div>',
-		'</ul>';
+		'<input type="search" name="query" size="20" placeholder="', WT_I18N::translate('Search'), '">',
+		'</form></li></ul></div>';
+
 	$menu_items=array(
 		WT_MenuBar::getGedcomMenu(),
 		WT_MenuBar::getMyPageMenu(),
